@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FundFlow — Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+  <div data-include="components/navbar.html"></div>
+  <main class="page container">
+    <section class="card auth-card">
+      <h2>Admin Login</h2>
+      <p class="muted">Only administrators can access the FundFlow control room.</p>
+      <form id="admin-login-form">
+        <label>Admin Token<input type="password" id="admin-token" required></label>
+        <button class="btn primary" type="submit">Continue to Admin Dashboard</button>
+      </form>
+    </section>
+  </main>
+  <div data-include="components/footer.html"></div>
+  <script src="js/app.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/admin-login.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+@import './style.css';
+/* Keep global responsive tweaks here */
+.container{padding:16px}
+@media(min-width:1024px){.container{padding:24px}}

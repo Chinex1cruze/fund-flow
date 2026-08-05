@@ -1,0 +1,4 @@
+@import './style.css';
+.vip-grid{grid-template-columns:repeat(1,1fr)}
+.vip-card .meta{font-size:13px; color:var(--text-secondary)}
+@media(min-width:700px){.vip-grid{grid-template-columns:repeat(3,1fr)}}

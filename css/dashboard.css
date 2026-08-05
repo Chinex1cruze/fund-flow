@@ -1,0 +1,102 @@
+@import './style.css';
+.wallet-grid{display:grid; grid-template-columns:1fr; gap:16px}
+.wallet-card{padding:18px; border-radius:18px; background:linear-gradient(180deg, rgba(37,99,235,0.10), rgba(15,23,42,0.92)); border:1px solid rgba(37,99,235,0.22); box-shadow:0 10px 26px rgba(2,6,23,0.35)}
+.wallet-card .muted{margin-bottom:10px; display:block; font-size:13px; letter-spacing:0.06em; text-transform:uppercase}
+.wallet-card div:last-child{font-size:22px; font-weight:700; color:#fff}
+.actions-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+.action{display:block; padding:15px; text-align:center; border-radius:14px; background:var(--card); color:var(--text-secondary); text-decoration:none; transition:all .18s ease; border:1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden}
+.action::after{content:''; position:absolute; inset:auto 50% 0 50%; width:0; height:0; background:rgba(251,191,36,0.16); border-radius:999px; transition:all .3s ease}
+.action:hover::after{inset:-40% -30%; width:160%; height:200%}
+.action:hover{background:rgba(37,99,235,0.14); color:#fff; transform:translateY(-2px); border-color:rgba(251,191,36,0.28)}
+.quick-actions{padding:22px}
+.quick-actions h3{margin-top:0; margin-bottom:16px}
+.withdraw-card, .deposit-card{padding:24px; border-radius:24px; box-shadow:0 12px 38px rgba(15,23,42,0.25)}
+.withdraw-header{display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom:24px; flex-wrap:wrap}
+.balance-card{min-width:220px; padding:18px; border-radius:18px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.16);}
+.balance-card .muted{margin-bottom:8px; display:block; color:var(--text-secondary)}
+.balance-value{font-size:28px; font-weight:700; color:#fff; letter-spacing:0.02em}
+.section-heading{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:18px}
+.section-heading h2{margin:0}
+.status-pill{padding:6px 10px; border-radius:999px; background:rgba(37,99,235,0.12); border:1px solid rgba(37,99,235,0.3); color:#91c6ff; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em}
+.form-grid{display:grid; gap:18px}
+.form-field{display:flex; flex-direction:column; gap:10px}
+.form-field label{color:var(--text-secondary); font-size:14px}
+.form-field input, .form-field select{width:100%; margin-top:0; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:var(--text-main); box-sizing:border-box}
+.form-field input:readonly{opacity:0.88}
+.note-panel{padding:18px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.16); margin:24px 0;}
+.note-panel h3{margin-top:0; font-size:16px; color:#fff}
+.note-panel ul{margin:12px 0 0 18px; color:var(--text-secondary);}
+.note-panel li{margin-bottom:10px; line-height:1.6;}
+.deposit-hero{display:grid; gap:20px; align-items:center; grid-template-columns:1fr;}
+.deposit-hero-panel{display:flex; justify-content:center; align-items:center;}
+.dashboard-hero{display:grid; gap:20px; align-items:center; grid-template-columns:1fr;}
+.dashboard-hero-panel{display:flex; justify-content:center; align-items:center;}
+.dashboard-banner,.deposit-hero-card{width:100%; border-radius:18px;}
+.dashboard-banner{max-width:320px; object-fit:contain; border:1px solid rgba(251,191,36,0.14); box-shadow:0 16px 40px rgba(2,6,23,0.45)}
+.deposit-hero-card{padding:20px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.16); text-align:center;}
+.deposit-hero-value{font-size:32px; font-weight:700; margin-top:10px; color:#fff;}
+.deposit-card h2{margin-top:0;}
+.deposit-meta{padding:18px; background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.14); margin:18px 0;}
+.deposit-meta p{margin:8px 0 0;color:var(--text-secondary);line-height:1.7}
+.paystack-account-card{padding:20px; border-radius:20px; background:linear-gradient(180deg, rgba(37,99,235,0.08), rgba(15,23,42,0.4)); border:1px solid rgba(37,99,235,0.18); margin-bottom:24px}
+.paystack-account-header{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px}
+.paystack-account-grid{display:grid; gap:16px}
+.paystack-stat{font-size:26px; font-weight:700; color:#fff; word-break:break-all}
+.button-row{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; margin-top:18px}
+.btn.ghost{background:transparent; border:1px solid rgba(255,255,255,0.14); color:var(--text-main)}
+.btn.ghost:hover{background:rgba(255,255,255,0.06)}
+.modern-form{display:grid; gap:20px}
+#active-plan{padding:22px}
+#active-plan h3{margin-top:0}
+.dashboard-shell{padding-bottom:80px}
+.dashboard-header{display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; padding:18px 20px; border-radius:22px; background:linear-gradient(135deg, rgba(251,191,36,0.16), rgba(17,19,27,0.92)); border:1px solid rgba(251,191,36,0.22)}
+.dashboard-profile-row{display:flex; gap:14px; align-items:center}
+.dashboard-avatar-wrap{width:62px; height:62px; border-radius:18px; overflow:hidden; background:rgba(255,255,255,0.06); display:grid; place-items:center; border:1px solid rgba(255,255,255,0.1)}
+.dashboard-avatar{width:100%; height:100%; object-fit:cover}
+.dashboard-greeting{font-size:12px; letter-spacing:0.18em; text-transform:uppercase; color:#fde68a; margin-bottom:4px}
+.dashboard-user-name{margin:0; font-size:24px}
+.icon-pill{display:flex; align-items:center; gap:8px; border:none; background:rgba(255,255,255,0.06); color:#fff; padding:10px 14px; border-radius:999px; cursor:pointer}
+.notification-count{background:rgba(251,191,36,0.18); border:1px solid rgba(251,191,36,0.28); border-radius:999px; padding:2px 8px; font-size:12px}
+.wallet-stack{margin-top:16px}
+.dashboard-wallet-grid .wallet-card{position:relative; overflow:hidden; background:linear-gradient(180deg, rgba(251,191,36,0.12), rgba(17,19,27,0.94));}
+.dashboard-wallet-grid .wallet-card::before{content:''; position:absolute; inset:0; background:radial-gradient(circle at top right, rgba(251,191,36,0.22), transparent 40%); pointer-events:none}
+.balance-toggle{margin-top:16px; font-size:12px; text-transform:uppercase; letter-spacing:.08em; border:1px solid rgba(255,255,255,0.14); background:transparent; color:#fff; border-radius:999px; padding:6px 12px; cursor:pointer}
+.dashboard-wallet-inline{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap}
+.balance-amount.masked{letter-spacing:0.08em}
+.balance-amount{font-feature-settings:'tnum'; font-variant-numeric:tabular-nums}
+.announcement-banner{margin-top:16px; padding:16px 18px; border-radius:20px; border:1px solid rgba(251,191,36,0.25); background:linear-gradient(135deg, rgba(251,191,36,0.18), rgba(17,19,27,0.92)); display:flex; flex-direction:column; gap:8px; animation:fadeIn .35s ease}
+.announcement-banner.hidden{display:none}
+.announcement-kicker{font-size:12px; color:#fde68a; letter-spacing:0.14em; text-transform:uppercase}
+.announcement-content{color:#fff; line-height:1.7}
+.dashboard-account-card{margin-top:16px}
+.dashboard-account-header{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap}
+.dashboard-section-title{margin:0}
+.deposit-account-loader{padding:16px; border-radius:18px; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.14)}
+.skeleton-lines{display:grid; gap:10px}
+.skeleton-line{display:block; height:12px; border-radius:999px; background:linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.12), rgba(255,255,255,0.06)); background-size:200% 100%; animation:shimmer 1.2s linear infinite}
+.skeleton-line.long{width:78%}
+.skeleton-line.medium{width:55%}
+.skeleton-line.short{width:36%}
+.deposit-load-message{margin-top:14px; color:#fde68a; letter-spacing:0.08em; text-transform:uppercase; font-size:12px}
+.deposit-account-card{padding:18px; border-radius:18px; background:linear-gradient(180deg, rgba(37,99,235,0.10), rgba(15,23,42,0.9)); border:1px solid rgba(37,99,235,0.22)}
+.deposit-notice{margin-top:14px; line-height:1.7}
+.deposit-account-grid{display:grid; gap:16px}
+.account-copy-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+.account-stat-label{font-size:12px; color:#cffafe; text-transform:uppercase; letter-spacing:.14em}
+.account-stat-value{font-size:24px; font-weight:700; word-break:break-all; margin-top:4px}
+.transactions-heading{margin-bottom:14px}
+.view-all-link{color:#fde68a; text-decoration:none}
+.transactions-list{display:grid; gap:12px}
+.transaction-row{display:flex; align-items:center; justify-content:space-between; gap:12px; background:rgba(255,255,255,0.04); border-radius:16px; padding:14px; border:1px solid rgba(255,255,255,0.08)}
+.transaction-left{display:flex; gap:12px; align-items:center}
+.transaction-icon{width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.24)}
+.transaction-meta strong{display:block}
+.transaction-meta .muted{font-size:13px; margin-top:4px}
+.transaction-amount{font-weight:700}
+.transaction-amount.positive{color:#22c55e}
+.transaction-amount.negative{color:#fca5a5}
+.hidden{display:none!important}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+@media(min-width:700px){.wallet-grid{grid-template-columns:repeat(3,1fr)} .actions-grid{grid-template-columns:repeat(6,1fr)} .form-grid{grid-template-columns:repeat(2,1fr)} .paystack-account-grid{grid-template-columns:repeat(2,1fr)} .deposit-hero{grid-template-columns:2fr 1fr;}.dashboard-hero{grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:28px;}.dashboard-hero-panel{justify-content:flex-end;}.deposit-hero-panel{justify-content:flex-end;}.deposit-card{max-width:720px; margin:auto;}.hero-brand{margin-bottom:0;}.dashboard-wallet-grid{grid-template-columns:repeat(4,1fr)} .deposit-account-grid{grid-template-columns:repeat(2,1fr)} }
+

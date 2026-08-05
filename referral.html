@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FundFlow — Referral</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div data-include="components/navbar.html"></div>
+  <main class="page container">
+    <section class="card">
+      <h2>Referral</h2>
+      <label>Referral Link<input type="text" id="ref-link" readonly></label>
+      <div class="row">
+        <button class="btn outline" id="copy-ref">Copy Referral Link</button>
+        <div class="muted" id="ref-count">Referrals: 0</div>
+      </div>
+      <div class="muted" id="ref-earn">Referral Earnings: ₦0</div>
+      <p class="muted">Referral bonus: Earn 5% of every successful referral's deposit.</p>
+    </section>
+  </main>
+  <div data-include="components/footer.html"></div>
+  <script src="js/app.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/referral.js"></script>
+</body>
+</html>
+
+
+

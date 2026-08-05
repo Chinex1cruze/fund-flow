@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FundFlow — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div data-include="components/navbar.html"></div>
+  <main class="page container dashboard-shell">
+    <section class="dashboard-header card">
+      <div class="dashboard-profile-row">
+        <div class="dashboard-avatar-wrap">
+          <img id="user-profile-picture" alt="User profile" class="dashboard-avatar" />
+        </div>
+        <div>
+          <div id="dashboard-greeting" class="dashboard-greeting">Good Evening</div>
+          <h1 id="dashboard-user-name" class="dashboard-user-name">Welcome</h1>
+        </div>
+      </div>
+      <button class="icon-pill" id="notifications-button" type="button" aria-label="Notifications">
+        <span class="icon">🔔</span>
+        <span id="notification-count" class="notification-count">0</span>
+      </button>
+    </section>
+
+    <section class="wallet-stack">
+      <div id="wallet-cards" class="wallet-grid dashboard-wallet-grid"></div>
+    </section>
+
+    <section id="announcement-banner" class="announcement-banner hidden">
+      <div class="announcement-kicker">Promotions · VIP · Admin · Updates</div>
+      <div id="announcement-content" class="announcement-content"></div>
+    </section>
+
+    <section class="card dashboard-account-card">
+      <div class="dashboard-account-header">
+        <div>
+          <div class="muted">VIP plan countdown</div>
+          <h3 class="dashboard-section-title">Active VIP plan status</h3>
+        </div>
+      </div>
+      <div id="vip-countdown-content" class="deposit-account-card">
+        <div class="muted">Loading your VIP plan countdown...</div>
+      </div>
+      <p class="muted deposit-notice">Your active VIP plan countdown shows the next daily payout time.</p>
+    </section>
+
+    <section class="quick-actions card">
+      <div class="section-heading">
+        <div>
+          <h3>Quick Actions</h3>
+        </div>
+      </div>
+      <div class="actions-grid">
+        <a href="deposit.html" class="action">Deposit</a>
+        <a href="vip.html" class="action">VIP</a>
+        <a href="withdraw.html" class="action">Withdraw</a>
+        <a href="referral.html" class="action">Referral</a>
+        <a href="profile.html" class="action">Transactions</a>
+        <a href="https://t.me/+MOqlB_KWQ0UzYmNk" target="_blank" rel="noopener" class="action">Support</a>
+      </div>
+    </section>
+
+    <section class="card" id="active-plan">
+      <div class="section-heading">
+        <div>
+          <h3>Active VIP Plan</h3>
+        </div>
+      </div>
+      <div id="active-plan-details"></div>
+    </section>
+
+    <section class="card transactions-card">
+      <div class="section-heading transactions-heading">
+        <div>
+          <h3>Recent Transactions</h3>
+        </div>
+        <a href="profile.html" class="view-all-link">View All</a>
+      </div>
+      <div id="transactions-list" class="transactions-list"></div>
+    </section>
+  </main>
+  <div data-include="components/footer.html"></div>
+
+  <div id="community-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="community-modal-close" aria-label="Close community prompt">×</button>
+      <img src="banner.jpeg" alt="Join FundFlow Community" class="modal-banner" />
+      <h2>🎉 Welcome to FundFlow</h2>
+      <p>Welcome to FundFlow. Need assistance with deposits, withdrawals, VIP plans or anything else? Join our official Telegram community for support and updates.</p>
+      <div class="modal-actions">
+        <a href="https://t.me/fundflow001" target="_blank" rel="noopener" class="btn primary">Join Telegram Channel</a>
+        <a href="https://t.me/+MOqlB_KWQ0UzYmNk" target="_blank" rel="noopener" class="btn outline">Join Telegram Support Group</a>
+        <button type="button" id="dismiss-community" class="btn ghost modal-maybe-later">Maybe Later</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/countdown.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
+
+
+

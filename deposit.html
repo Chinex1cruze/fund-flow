@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FundFlow — Deposit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div data-include="components/navbar.html"></div>
+  <main class="page container">
+    <section class="hero card deposit-hero">
+      <div class="hero-brand">
+        <img src="assets/logo/fund_flow.jpeg" alt="Funds Flow" class="hero-brand-image" />
+        <div>
+          <div class="hero-brand-title">Deposit Funds</div>
+          <p class="muted">Transfer to your assigned secure deposit account and submit your payment reference for admin verification.</p>
+        </div>
+      </div>
+      <div class="deposit-hero-panel">
+        <div class="deposit-hero-card">
+          <div class="muted">Available balance</div>
+          <div class="deposit-hero-value">₦<span id="hero-balance">0</span></div>
+          <div class="muted">Minimum deposit ₦3,000</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card deposit-card">
+      <div class="section-heading">
+        <div>
+          <h2>Assigned bank transfer deposit</h2>
+          <p class="muted">Your account is prepared dynamically and assigned once for safe deposits.</p>
+        </div>
+        <span class="status-pill">Active</span>
+      </div>
+
+      <div class="paystack-account-card card" id="deposit-placeholder-card">
+        <div class="deposit-account-placeholder">
+          <div class="muted">Enter the amount you want to deposit (minimum ₦3,000) and continue to view your assigned virtual account details.</div>
+        </div>
+      </div>
+
+      <!-- Step 1: Enter amount -->
+      <form id="deposit-form" class="modern-form">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Deposit Amount (₦)</label>
+            <input type="number" id="deposit-amount" min="3000" placeholder="Enter amount to deposit" required>
+          </div>
+        </div>
+
+        <div class="deposit-meta card">
+          <div class="muted">Payment instructions</div>
+          <p>Minimum deposit is ₦3,000. After entering an amount you'll be shown the assigned account details to make payment.</p>
+        </div>
+        <button class="btn primary" type="submit">Continue to payment</button>
+      </form>
+
+      <!-- Step 2: Payment details (hidden until amount validated) -->
+      <div id="payment-step" class="hidden">
+        <div class="paystack-account-card card" style="margin-top:16px;">
+          <div id="payment-account-loader" class="deposit-account-loader hidden">
+            <div class="skeleton-lines">
+              <span class="skeleton-line long"></span>
+              <span class="skeleton-line medium"></span>
+              <span class="skeleton-line short"></span>
+            </div>
+            <div class="deposit-load-message">Loading your virtual deposit account...</div>
+          </div>
+          <div id="payment-account-card"></div>
+        </div>
+
+        <div class="note-panel card" style="margin-top:16px;">
+          <div class="row" style="justify-content:space-between; gap:12px;">
+            <div>
+              <div class="muted">Amount due</div>
+              <div class="balance-value" id="payment-amount-label">₦0</div>
+            </div>
+            <div>
+              <div class="muted">Payment window</div>
+              <div class="balance-value" id="payment-countdown">10:00</div>
+            </div>
+            <div>
+              <div class="muted">Auto close</div>
+              <div class="balance-value" id="close-countdown">03:00</div>
+            </div>
+          </div>
+        </div>
+
+        <form id="payment-form" class="modern-form" style="margin-top:12px;">
+          <div id="payment-session-banner" class="note-panel hidden" style="border-left:4px solid #e53e3e; background:#fff6f6; color:#7f1d1d; margin-bottom:8px; display:none;"></div>
+          <div class="form-field">
+            <label>Transaction reference / narration</label>
+            <input type="text" id="payment-transaction-reference" placeholder="Paste the transfer reference or narration" required>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn primary" type="submit">I have made payment</button>
+            <button class="btn ghost" type="button" id="payment-back">Back</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+  <div data-include="components/footer.html"></div>
+  <script src="js/app.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/deposit.js"></script>
+</body>
+</html>
+
+
+
