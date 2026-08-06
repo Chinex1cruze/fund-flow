@@ -201,13 +201,20 @@ function getPaystackPublicKey(){
   return PAYSTACK_PUBLIC_KEY || process.env.PAYSTACK_PUBLIC_KEY || '';
 }
 
-function applyPayouts(user){
-  if(!user || !user.activePlan || !user.activePlan.nextPayoutAt) return false;
+function applyPayouts(user, data){
+  if(!user || !data || !user.activePlan || !user.activePlan.nextPayoutAt) return false;
   let updated = false;
   const now = Date.now();
   while(user.activePlan.nextPayoutAt <= now){
-    user.balance = (user.balance || 0) + (user.activePlan.daily || 0);
-    user.earnings = (user.earnings || 0) + (user.activePlan.daily || 0);
+    const payout = Number(user.activePlan.daily || 0);
+    user.balance = (user.balance || 0) + payout;
+    user.earnings = (user.earnings || 0) + payout;
+    createNotification(data, {
+      userId: user.id,
+      title: 'VIP reward credited',
+      text: `You received ₦${payout.toLocaleString()} from your ${user.activePlan.name} plan.`,
+      type: 'success'
+    });
     user.activePlan.nextPayoutAt += 24 * 60 * 60 * 1000;
     updated = true;
   }
@@ -230,7 +237,7 @@ function authMiddleware(req, res, next){
     const data = readData();
     const user = findUserById(data, payload.id);
     if(!user) return res.status(401).json({ message: 'Invalid authentication token' });
-    if(applyPayouts(user)) writeData(data);
+    if(applyPayouts(user, data)) writeData(data);
     req.user = user;
     next();
   }catch(err){
@@ -241,8 +248,8 @@ function authMiddleware(req, res, next){
 // Helper: simple admin auth using an admin token header (x-admin-token)
 function adminAuthMiddleware(req, res, next){
   // Accept admin token via header, query param, or secure httpOnly cookie 'ff_admin'
-  const token = req.headers['x-admin-token'] || req.query.adminToken || req.cookies && req.cookies['ff_admin'];
-  const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'fundflow-admin-token';
+  const token = req.headers['x-admin-token'] || req.query.adminToken || (req.cookies && req.cookies['ff_admin']);
+  const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'Chinex$boy1';
   if(!token || token !== ADMIN_TOKEN) return res.status(401).json({ message: 'Admin authorization required' });
   req.admin = { token: ADMIN_TOKEN };
   next();
@@ -316,7 +323,7 @@ app.post('/api/auth/login', (req, res) => {
   const data = readData();
   const user = findUserByPhone(data, phone);
   if(!user || !bcrypt.compareSync(password, user.passwordHash)) return res.status(401).json({ message: 'Invalid credentials' });
-  if(applyPayouts(user)) writeData(data);
+  if(applyPayouts(user, data)) writeData(data);
   const token = generateToken(user);
   res.cookie(TOKEN_NAME, token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
   res.json({ user: sanitizeUser(user) });
@@ -535,6 +542,12 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
   data.deposits.push(deposit);
   // create a pending transaction record
   recordTransaction(data, { userId: user.id, type: 'deposit', amount: depositAmount, status: 'pending', meta: { depositId: deposit.id, transactionReference: deposit.transactionReference } });
+  createNotification(data, {
+    userId: user.id,
+    title: 'Deposit submitted',
+    text: `Your deposit of ₦${depositAmount.toLocaleString()} has been submitted and is pending approval.`,
+    type: 'info'
+  });
   writeData(data);
   res.json({ deposit });
 });
@@ -551,6 +564,12 @@ app.post('/api/vips/buy', authMiddleware, (req, res) => {
   const now = Date.now();
   user.balance -= plan.deposit;
   user.activePlan = { id: plan.id, name: plan.name, deposit: plan.deposit, daily: plan.daily, startedAt: now, nextPayoutAt: now + 24 * 60 * 60 * 1000 };
+  createNotification(data, {
+    userId: user.id,
+    title: 'VIP Plan Activated',
+    text: `Your ${plan.name} is active. Daily rewards of ₦${plan.daily.toLocaleString()} will arrive automatically.`,
+    type: 'success'
+  });
   writeData(data);
   res.json({ user: sanitizeUser(user) });
 });
@@ -594,6 +613,12 @@ app.post('/api/withdrawals', authMiddleware, (req, res) => {
   data.withdrawals.push(withdrawal);
   // create a pending transaction record
   recordTransaction(data, { userId: user.id, type: 'withdrawal', amount: withdrawAmount, status: 'pending', meta: { withdrawalId: withdrawal.id } });
+  createNotification(data, {
+    userId: user.id,
+    title: 'Withdrawal requested',
+    text: `Your withdrawal of ₦${withdrawAmount.toLocaleString()} is pending approval.`,
+    type: 'info'
+  });
   writeData(data);
   res.json({ withdrawal });
 });
