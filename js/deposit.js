@@ -55,15 +55,49 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   }
 
   async function loadDefaultDepositAccount(){
-    try{
-      const response = await api.getDepositAccount();
-      const account = response.account || {};
-      const bankNameEl = document.getElementById('default-bank-name');
-      const accountNumberEl = document.getElementById('default-account-number');
-      const accountNameEl = document.getElementById('default-account-name');
+    const bankNameEl = document.getElementById('default-bank-name');
+    const accountNumberEl = document.getElementById('default-account-number');
+    const accountNameEl = document.getElementById('default-account-name');
+    const copyDefaultNumberBtn = document.getElementById('copy-account-number-default');
+    const copyDefaultNameBtn = document.getElementById('copy-account-name-default');
+
+    const setAccountDetails = (account) => {
       if(bankNameEl) bankNameEl.textContent = account.bankName || 'Sterling Bank';
       if(accountNumberEl) accountNumberEl.textContent = account.accountNumber || '0142489003';
       if(accountNameEl) accountNameEl.textContent = account.accountName || 'Chinedu Chima';
+    };
+
+    const defaultAccount = { bankName: 'Sterling Bank', accountNumber: '0142489003', accountName: 'Chinedu Chima' };
+    setAccountDetails(defaultAccount);
+
+    if(copyDefaultNumberBtn){
+      copyDefaultNumberBtn.addEventListener('click', async () => {
+        try{
+          await navigator.clipboard.writeText(accountNumberEl?.textContent || '');
+          showToast('Account number copied.', 'success');
+        }catch(err){
+          showToast('Unable to copy account number.', 'warning');
+        }
+      });
+    }
+
+    if(copyDefaultNameBtn){
+      copyDefaultNameBtn.addEventListener('click', async () => {
+        try{
+          await navigator.clipboard.writeText(accountNameEl?.textContent || '');
+          showToast('Account name copied.', 'success');
+        }catch(err){
+          showToast('Unable to copy account name.', 'warning');
+        }
+      });
+    }
+
+    try{
+      const response = await api.getDepositAccount();
+      const account = response.account || {};
+      if(account.bankName || account.accountNumber || account.accountName){
+        setAccountDetails(account);
+      }
     }catch(err){
       console.warn('Unable to load default deposit account', err);
     }
