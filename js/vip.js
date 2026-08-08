@@ -28,6 +28,7 @@ async function renderVIPList(){
   const list = document.getElementById('vip-list') || document.getElementById('vip-preview');
   if(!list) return;
   list.innerHTML = '';
+  const isVipPage = window.location.pathname.split('/').pop() === 'vip.html';
 
   // load plans from backend if available
   const plans = await loadVIPPlans();
@@ -44,10 +45,13 @@ async function renderVIPList(){
   plans.forEach(plan=>{
     const hasActive = u && u.activePlan && u.activePlan.id === plan.id;
     const card = document.createElement('div'); card.className='vip-card card';
+    const actionButton = isVipPage
+      ? `<button class="btn primary buy-vip" data-id="${plan.id}">Buy Now</button>`
+      : `<a class="btn outline" href="vip.html">View details</a>`;
     card.innerHTML = `
       <div class="row"><strong>${plan.name}</strong><div class="muted" style="margin-left:auto">Deposit ₦${formatN(plan.deposit)}</div></div>
       <div class="meta">Daily Reward: ₦${formatN(plan.daily)}</div>
-      <div class="row mt-2"><button class="btn primary buy-vip" data-id="${plan.id}">Buy Now</button>
+      <div class="row mt-2">${actionButton}
       <div class="muted" style="margin-left:auto" data-countdown-id="${plan.id}">24:00:00</div></div>
     `;
     list.appendChild(card);
@@ -81,6 +85,12 @@ async function renderVIPList(){
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
+  const isVipPage = window.location.pathname.split('/').pop() === 'vip.html';
+  if(isVipPage && !getUser()){
+    location.href = 'login.html';
+    return;
+  }
+
   renderVIPList();
 
   document.addEventListener('click', async (e)=>{

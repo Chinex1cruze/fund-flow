@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="muted">Amount: ₦${formatN(item.amount)}</div>
         <div class="muted">Reference: ${item.transactionReference || '—'}</div>
         <div class="muted">Status: ${item.status || 'pending'}</div>
+        ${item.screenshot ? `<div class="muted">Screenshot:</div><img src="${item.screenshot}" alt="Payment screenshot" style="max-width:100%; border-radius:14px; margin:12px 0; border:1px solid rgba(255,255,255,0.08);" />` : ''}
         <div class="button-row">
           <button class="btn primary" data-action="approve-deposit" data-id="${item.id}">Approve</button>
           <button class="btn ghost" data-action="reject-deposit" data-id="${item.id}">Reject</button>

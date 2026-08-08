@@ -13,9 +13,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const paymentForm = document.getElementById('payment-form');
   const paymentAmountInput = document.getElementById('payment-amount');
   const paymentTxInput = document.getElementById('payment-transaction-reference');
+  const paymentScreenshotInput = document.getElementById('payment-screenshot');
   const paymentBack = document.getElementById('payment-back');
 
   if(!step1Form) return;
+  loadDefaultDepositAccount();
 
   const depositPlaceholderCard = document.getElementById('deposit-placeholder-card');
   const paymentAmountLabel = document.getElementById('payment-amount-label');
@@ -37,7 +39,35 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
+  const generatePaymentReference = () => {
+    return `FF-${Math.floor(100000 + Math.random() * 900000)}-${Date.now().toString().slice(-5)}`;
+  };
+
   const bannerEl = document.getElementById('payment-session-banner');
+
+  async function toBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Unable to process screenshot file'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadDefaultDepositAccount(){
+    try{
+      const response = await api.getDepositAccount();
+      const account = response.account || {};
+      const bankNameEl = document.getElementById('default-bank-name');
+      const accountNumberEl = document.getElementById('default-account-number');
+      const accountNameEl = document.getElementById('default-account-name');
+      if(bankNameEl) bankNameEl.textContent = account.bankName || 'Sterling Bank';
+      if(accountNumberEl) accountNumberEl.textContent = account.accountNumber || '0142489003';
+      if(accountNameEl) accountNameEl.textContent = account.accountName || 'Chinedu Chima';
+    }catch(err){
+      console.warn('Unable to load default deposit account', err);
+    }
+  }
 
   const hideBanner = () => {
     if(!bannerEl) return;
@@ -138,6 +168,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         }
       }, 1000);
 
+      const paymentReference = account.paymentReference || generatePaymentReference();
+      if(paymentTxInput) paymentTxInput.value = paymentReference;
       paymentAccountCard.innerHTML = `
         <div class="deposit-account-grid">
           <div>
@@ -153,17 +185,22 @@ document.addEventListener('DOMContentLoaded', async ()=>{
             <div class="account-stat-value">${account.accountName || '—'}</div>
           </div>
           <div>
-            <div class="account-stat-label">Status</div>
-            <div class="account-stat-value">${account.status || 'Active'}</div>
+            <div class="account-stat-label">Payment reference</div>
+            <div class="account-stat-value">${paymentReference}</div>
           </div>
         </div>
         <div class="account-copy-row">
           <button type="button" id="copy-account-number-2" class="btn primary">Copy Account Number</button>
+          <button type="button" id="copy-payment-ref" class="btn outline">Copy Reference</button>
         </div>
       `;
       document.getElementById('copy-account-number-2')?.addEventListener('click', async () => {
         try{ await navigator.clipboard.writeText(account.accountNumber || ''); showToast('Account Number copied.', 'success'); }
         catch(err){ showToast('Unable to copy the account number', 'warning'); }
+      });
+      document.getElementById('copy-payment-ref')?.addEventListener('click', async () => {
+        try{ await navigator.clipboard.writeText(paymentReference); showToast('Payment reference copied.', 'success'); }
+        catch(err){ showToast('Unable to copy the payment reference', 'warning'); }
       });
       paymentAccountLoader.classList.add('hidden');
     }catch(err){
@@ -189,9 +226,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const stopLoading = setLoading(button, true);
     const amt = Number(paymentAmountInput.value);
     const txRef = paymentTxInput.value.trim();
-    if(!txRef){ stopLoading(); showToast('Transfer reference is required after sending your bank transfer.', 'warning'); return; }
+    if(!txRef){ stopLoading(); showToast('Transfer reference is required.', 'warning'); return; }
+    let screenshotData = null;
+    if(paymentScreenshotInput && paymentScreenshotInput.files && paymentScreenshotInput.files[0]){
+      try{
+        screenshotData = await toBase64(paymentScreenshotInput.files[0]);
+      }catch(err){ console.warn('Screenshot conversion failed', err); }
+    }
     try{
-      const res = await api.deposit({ amount: amt, transactionReference: txRef, screenshot: null });
+      const res = await api.deposit({ amount: amt, transactionReference: txRef, screenshot: screenshotData });
       if(res && res.deposit){ showToast('Deposit submitted and pending verification by admin.', 'success'); setTimeout(()=> location.href = 'dashboard.html', 800); }
       else showToast('Deposit submission failed', 'error');
     }catch(err){ console.error(err); showToast(err.message || 'Deposit failed', 'error'); }

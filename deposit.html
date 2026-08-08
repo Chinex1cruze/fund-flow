@@ -38,8 +38,26 @@
 
       <div class="paystack-account-card card" id="deposit-placeholder-card">
         <div class="deposit-account-placeholder">
-          <div class="muted">Enter the amount you want to deposit (minimum ₦3,000) and continue to view your assigned virtual account details.</div>
+          <div class="muted">This page displays your default funding account details and a secure payment reference for faster admin verification.</div>
         </div>
+      </div>
+
+      <div class="paystack-account-card card" id="default-deposit-card">
+        <div class="deposit-account-grid">
+          <div>
+            <div class="account-stat-label">Bank Name</div>
+            <div class="account-stat-value" id="default-bank-name">Sterling Bank</div>
+          </div>
+          <div>
+            <div class="account-stat-label">Account Number</div>
+            <div class="account-stat-value" id="default-account-number">0142489003</div>
+          </div>
+          <div>
+            <div class="account-stat-label">Account Name</div>
+            <div class="account-stat-value" id="default-account-name">Chinedu Chima</div>
+          </div>
+        </div>
+        <div class="deposit-notice">Use this payment account to transfer deposit funds. Complete the form below to generate a secure payment reference and submit your request for admin review.</div>
       </div>
 
       <!-- Step 1: Enter amount -->
@@ -91,15 +109,23 @@
 
         <form id="payment-form" class="modern-form" style="margin-top:12px;">
           <div id="payment-session-banner" class="note-panel hidden" style="border-left:4px solid #e53e3e; background:#fff6f6; color:#7f1d1d; margin-bottom:8px; display:none;"></div>
-          <div class="form-field">
-            <label>Transaction reference / narration</label>
-            <input type="text" id="payment-transaction-reference" placeholder="Paste the transfer reference or narration" required>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px;">
-            <button class="btn primary" type="submit">I have made payment</button>
-            <button class="btn ghost" type="button" id="payment-back">Back</button>
-          </div>
-        </form>
+         <div class="form-field">
+           <label>Payment reference</label>
+           <input type="text" id="payment-transaction-reference" readonly>
+         </div>
+         <input type="hidden" id="payment-amount" name="payment-amount" value="0">
+         <div class="form-field">
+           <label>Upload payment screenshot (optional)</label>
+           <input type="file" id="payment-screenshot" accept="image/*">
+         </div>
+         <div class="note-panel" style="padding:16px; margin-top:0;">
+           <div class="muted">After transferring the money, include the payment reference shown above in your bank transfer narration/description. This helps the administrator identify and verify your payment faster. After payment, submit your deposit request and wait for approval.</div>
+         </div>
+         <div style="display:flex;gap:8px;margin-top:8px;">
+           <button class="btn primary" type="submit">Submit deposit request</button>
+           <button class="btn ghost" type="button" id="payment-back">Back</button>
+         </div>
+          </form>
       </div>
     </section>
   </main>

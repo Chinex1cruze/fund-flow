@@ -1,9 +1,11 @@
 document.addEventListener('DOMContentLoaded', ()=>{
   const u = requireAuth();
+  const refCodeEl = document.getElementById('ref-code');
   const refLinkEl = document.getElementById('ref-link');
   const countEl = document.getElementById('ref-count');
   const earnEl = document.getElementById('ref-earn');
-  if(refLinkEl){ refLinkEl.value = location.origin + location.pathname + '?ref=' + (u.phone||''); }
+  if(refCodeEl) refCodeEl.value = u.referralCode || '';
+  if(refLinkEl) refLinkEl.value = u.referralLink || `${location.origin}${location.pathname.replace(/\/[^/]*$/, '/register.html')}?ref=${encodeURIComponent(u.referralCode||u.phone||'')}`;
   if(countEl) countEl.textContent = 'Referrals: ' + (u.referrals||0);
   if(earnEl) earnEl.textContent = 'Referral Earnings: ₦' + formatN(u.refEarnings||0);
   document.getElementById('copy-ref')?.addEventListener('click', async () => {

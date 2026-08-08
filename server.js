@@ -35,8 +35,8 @@ const PAYSTACK_PREFERRED_BANK = process.env.PAYSTACK_PREFERRED_BANK || 'wema-ban
 const TOKEN_NAME = 'ff_token';
 const PAYSTACK_API_BASE = 'https://api.paystack.co';
 const DEFAULT_DEPOSIT_ACCOUNTS = [
-  { id: 'acct-access', bankName: 'Access Bank', accountNumber: '1909738594', accountName: 'Chinedu Chima', status: 'active', createdAt: Date.now() },
-  { id: 'acct-sterling', bankName: 'Sterling Bank', accountNumber: '0142489003', accountName: 'Chinedu Chima', status: 'active', createdAt: Date.now() }
+  { id: 'acct-sterling', bankName: 'Sterling Bank', accountNumber: '0142489003', accountName: 'Chinedu Chima', status: 'active', createdAt: Date.now() },
+  { id: 'acct-access', bankName: 'Access Bank', accountNumber: '1909738594', accountName: 'Chinedu Chima', status: 'active', createdAt: Date.now() }
 ];
 const VIP_PLANS = [
   { id: 1, name: 'VIP 1', deposit: 3000, daily: 700 },
@@ -88,10 +88,36 @@ function normalizeData(data){
   normalized.auditLogs = normalized.auditLogs || [];
   normalized.announcements = normalized.announcements || [];
   normalized.notifications = normalized.notifications || [];
-  normalized.depositAccounts = normalized.depositAccounts && normalized.depositAccounts.length ? normalized.depositAccounts : DEFAULT_DEPOSIT_ACCOUNTS;
+  normalized.depositAccounts = normalized.depositAccounts && normalized.depositAccounts.length ? normalized.depositAccounts : DEFAULT_DEPOSIT_ACCOUNTS.slice();
+  const hasSterling = normalized.depositAccounts.some(a => a.id === 'acct-sterling' || a.accountNumber === '0142489003');
+  if(!hasSterling){ normalized.depositAccounts.unshift(DEFAULT_DEPOSIT_ACCOUNTS[0]); }
   normalized.depositAccountCursor = Number.isInteger(normalized.depositAccountCursor) ? normalized.depositAccountCursor : 0;
   normalized.paymentSettings = normalized.paymentSettings || {};
   return normalized;
+}
+
+function buildReferralLink(req, referralCode){
+  const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
+  const path = `/register.html?ref=${encodeURIComponent(referralCode)}`;
+  return origin + path;
+}
+
+function generateReferralCode(){
+  return `FF${Date.now().toString().slice(-8)}${Math.floor(Math.random()*90+10)}`;
+}
+
+function generatePaymentReference(){
+  return `FF-${Math.floor(100000 + Math.random() * 900000)}-${Date.now().toString().slice(-5)}`;
+}
+
+function findUserByReferralCode(data, code){
+  if(!code) return null;
+  return data.users.find(u => u.referralCode === code || u.id === code || String(u.phone) === String(code));
+}
+
+function getDefaultDepositAccount(data){
+  const accounts = data.depositAccounts || DEFAULT_DEPOSIT_ACCOUNTS;
+  return accounts.find(a => a.id === 'acct-sterling' || a.accountNumber === '0142489003') || accounts[0] || DEFAULT_DEPOSIT_ACCOUNTS[0];
 }
 
 function readData(){
@@ -290,12 +316,13 @@ const limiter = rateLimit({ windowMs: 60 * 1000, max: 80 });
 app.use(limiter);
 
 app.post('/api/auth/register', (req, res) => {
-  const { fullName, phone, password } = req.body;
+  const { fullName, phone, password, referralCode } = req.body;
   if(!fullName || !phone || !password) return res.status(400).json({ message: 'Missing required fields' });
   const data = readData();
   if(findUserByPhone(data, phone)) return res.status(409).json({ message: 'Phone number already registered' });
   const id = 'user-' + Date.now();
   const passwordHash = bcrypt.hashSync(password, 10);
+  const referral = generateReferralCode();
   const user = {
     id,
     fullName,
@@ -306,10 +333,25 @@ app.post('/api/auth/register', (req, res) => {
     earnings: 0,
     referrals: 0,
     refEarnings: 0,
-    activePlan: null
+    activePlan: null,
+    referralCode: referral,
+    referralLink: buildReferralLink(req, referral),
+    referredBy: null,
+    referredByCode: null,
+    referralRewardPaid: false
   };
+
+  if(referralCode){
+    const referrer = findUserByReferralCode(data, String(referralCode).trim());
+    if(referrer && referrer.id !== id){
+      user.referredBy = referrer.id;
+      user.referredByCode = referrer.referralCode;
+    }
+  }
+
   assignDepositAccountToUser(data, user);
   data.users.push(user);
+  recordTransaction(data, { userId: user.id, type: 'welcome_bonus', amount: 500, status: 'approved', meta: { note: 'Welcome bonus credited on signup' } });
   createNotification(data, { userId: user.id, title: 'Welcome bonus', text: 'Your account has been created and your welcome bonus has been credited.', type: 'success' });
   writeData(data);
   const token = generateToken(user);
@@ -338,7 +380,8 @@ app.get('/api/users/me', authMiddleware, (req, res) => {
   const data = readData();
   const user = findUserById(data, req.user.id);
   if(!user) return res.status(404).json({ message: 'User not found' });
-  if(applyPayouts(user)) writeData(data);
+  if(applyPayouts(user, data)) writeData(data);
+  if(!user.referralLink && user.referralCode){ user.referralLink = buildReferralLink(req, user.referralCode); writeData(data); }
   res.json({ user: sanitizeUser(user) });
 });
 
@@ -383,12 +426,12 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
   const user = findUserById(data, req.user.id);
   if(!user) return res.status(404).json({ message: 'User not found' });
 
-  // If amount is provided, create a per-deposit virtual account session
+  // If amount is provided, create a per-deposit virtual account session with a unique payment reference
   const amount = Number(req.query.amount || 0);
   if(amount && amount >= 3000){
     data.virtualAccounts = data.virtualAccounts || [];
     // select a deposit account to back this virtual account (rotate cursor)
-    const base = getNextDepositAccount(data) || { bankName: 'Access Bank', accountNumber: '1909738594', accountName: 'FundFlow', status: 'active' };
+    const base = getNextDepositAccount(data) || getDefaultDepositAccount(data) || { bankName: 'Sterling Bank', accountNumber: '0142489003', accountName: 'Chinedu Chima', status: 'active' };
 
     // generate a unique 10-digit virtual account number
     function genAccountNumber(){
@@ -401,6 +444,7 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
     while(existingNumbers.has(accountNumber)) accountNumber = genAccountNumber();
 
     const now = Date.now();
+    const paymentReference = generatePaymentReference();
     const virtual = {
       id: 'va-' + now,
       userId: user.id,
@@ -409,6 +453,7 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
       accountName: base.accountName || user.fullName || 'FundFlow',
       status: 'active',
       amount: amount,
+      paymentReference,
       createdAt: now,
       expiresAt: now + 10 * 60 * 1000, // payment window 10 minutes
       closeAt: now + 3 * 60 * 1000 // auto-close after 3 minutes
@@ -418,10 +463,9 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
     return res.json({ account: virtual, session: { paymentWindowSec: 10*60, autoCloseSec: 3*60 } });
   }
 
-  // default: assign a persistent deposit account to the user
-  const account = assignDepositAccountToUser(data, user);
-  writeData(data);
-  res.json({ account, status: 'active', note: 'Transfer only to this account. Your wallet will be credited automatically after payment verification.' });
+  // default: return the default funding deposit account details
+  const account = getDefaultDepositAccount(data);
+  res.json({ account: { ...account, status: account.status || 'active' }, status: 'active', note: 'Transfer only to this account. Your wallet will be credited automatically after payment verification.' });
 });
 
 app.get('/api/announcements', (req, res) => {
@@ -516,12 +560,12 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
   const { amount, transactionReference, screenshot } = req.body || {};
   const depositAmount = Number(amount);
   if(!depositAmount || depositAmount <= 0) return res.status(400).json({ message: 'Invalid deposit amount' });
-  if(!transactionReference) return res.status(400).json({ message: 'Transaction reference is required' });
-
+  const resolvedReference = String(transactionReference || generatePaymentReference()).trim();
+  if(!resolvedReference) return res.status(400).json({ message: 'Transaction reference is required' });
   const data = readData();
   data.deposits = data.deposits || [];
   // Prevent duplicate transaction references
-  if(data.deposits.find(d => d.transactionReference && d.transactionReference.toLowerCase() === String(transactionReference).toLowerCase())){
+  if(data.deposits.find(d => d.transactionReference && d.transactionReference.toLowerCase() === resolvedReference.toLowerCase())){
     return res.status(409).json({ message: 'Duplicate transaction reference' });
   }
 
@@ -532,7 +576,7 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
     id: 'dep-' + Date.now(),
     userId: user.id,
     amount: depositAmount,
-    transactionReference: String(transactionReference),
+    transactionReference: resolvedReference,
     screenshot: screenshot || null,
     status: 'pending',
     statusHistory: [{ status: 'pending', at: Date.now() }],
@@ -551,7 +595,6 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
   writeData(data);
   res.json({ deposit });
 });
-
 app.post('/api/vips/buy', authMiddleware, (req, res) => {
   const { planId } = req.body;
   const plan = VIP_PLANS.find((p) => p.id === Number(planId));
@@ -564,6 +607,7 @@ app.post('/api/vips/buy', authMiddleware, (req, res) => {
   const now = Date.now();
   user.balance -= plan.deposit;
   user.activePlan = { id: plan.id, name: plan.name, deposit: plan.deposit, daily: plan.daily, startedAt: now, nextPayoutAt: now + 24 * 60 * 60 * 1000 };
+  recordTransaction(data, { userId: user.id, type: 'vip_purchase', amount: plan.deposit, status: 'approved', meta: { planId: plan.id, planName: plan.name } });
   createNotification(data, {
     userId: user.id,
     title: 'VIP Plan Activated',
@@ -642,7 +686,25 @@ app.post('/api/admin/deposits/:id/approve', adminAuthMiddleware, (req, res) => {
   if(!user) return res.status(404).json({ message: 'User not found' });
   user.balance = (user.balance || 0) + deposit.amount;
   if(data.transactions) data.transactions.forEach(t => { if(t.meta && t.meta.depositId === deposit.id) t.status = 'approved'; });
+  recordTransaction(data, { userId: user.id, type: 'wallet_credit', amount: deposit.amount, status: 'approved', meta: { depositId: deposit.id, transactionReference: deposit.transactionReference } });
   createNotification(data, { userId: deposit.userId, title: 'Deposit approved', text: `Your deposit of ₦${deposit.amount} has been approved and credited to your wallet.`, type: 'success' });
+
+  if(user.referredBy){
+    const alreadyRewarded = (data.transactions || []).some(t => t.type === 'referral_earnings' && t.meta && t.meta.referredUserId === user.id);
+    if(!alreadyRewarded){
+      const referrer = findUserById(data, user.referredBy);
+      if(referrer && referrer.id !== user.id){
+        const rewardAmount = Math.round(deposit.amount * 0.05);
+        referrer.balance = (referrer.balance || 0) + rewardAmount;
+        referrer.earnings = (referrer.earnings || 0) + rewardAmount;
+        referrer.refEarnings = (referrer.refEarnings || 0) + rewardAmount;
+        referrer.referrals = (referrer.referrals || 0) + 1;
+        recordTransaction(data, { userId: referrer.id, type: 'referral_earnings', amount: rewardAmount, status: 'approved', meta: { depositId: deposit.id, referredUserId: user.id, transactionReference: deposit.transactionReference } });
+        createNotification(data, { userId: referrer.id, title: 'Referral reward received', text: `You earned ₦${rewardAmount.toLocaleString()} from a referred user's first approved deposit.`, type: 'success' });
+      }
+    }
+  }
+
   addAuditLog(data, { adminToken: req.admin.token, action: 'approve_deposit', details: { depositId: deposit.id, userId: deposit.userId, amount: deposit.amount } });
   writeData(data);
   res.json({ deposit, user: sanitizeUser(user) });
@@ -684,6 +746,7 @@ app.post('/api/admin/withdrawals/:id/approve', adminAuthMiddleware, (req, res) =
   wd.statusHistory = wd.statusHistory || [];
   wd.statusHistory.push({ status: 'approved', at: Date.now() });
   if(data.transactions) data.transactions.forEach(t => { if(t.meta && t.meta.withdrawalId === wd.id) t.status = 'approved'; });
+  recordTransaction(data, { userId: user.id, type: 'wallet_debit', amount: wd.amount, status: 'approved', meta: { withdrawalId: wd.id } });
   createNotification(data, { userId: wd.userId, title: 'Withdrawal approved', text: `Your withdrawal of ₦${wd.amount} has been approved and processed.`, type: 'success' });
   addAuditLog(data, { adminToken: req.admin.token, action: 'approve_withdrawal', details: { withdrawalId: wd.id, userId: wd.userId, amount: wd.amount } });
   writeData(data);
