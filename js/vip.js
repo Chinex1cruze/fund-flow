@@ -27,6 +27,7 @@ async function loadVIPPlans(){
 async function renderVIPList(){
   const list = document.getElementById('vip-list') || document.getElementById('vip-preview');
   if(!list) return;
+  const isPreview = list.id === 'vip-preview';
   list.innerHTML = '';
 
   // load plans from backend if available
@@ -47,8 +48,10 @@ async function renderVIPList(){
     card.innerHTML = `
       <div class="row"><strong>${plan.name}</strong><div class="muted" style="margin-left:auto">Deposit ₦${formatN(plan.deposit)}</div></div>
       <div class="meta">Daily Reward: ₦${formatN(plan.daily)}</div>
-      <div class="row mt-2"><button class="btn primary buy-vip" data-id="${plan.id}">Buy Now</button>
-      <div class="muted" style="margin-left:auto" data-countdown-id="${plan.id}">24:00:00</div></div>
+      <div class="row mt-2">
+        <button class="btn ${isPreview ? 'outline' : 'primary'} ${isPreview ? 'view-vip' : 'buy-vip'}" data-id="${plan.id}">${isPreview ? 'View details' : 'Buy Now'}</button>
+        <div class="muted" style="margin-left:auto" data-countdown-id="${plan.id}">24:00:00</div>
+      </div>
     `;
     list.appendChild(card);
 
@@ -81,9 +84,18 @@ async function renderVIPList(){
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
+  if(document.getElementById('vip-list')){
+    const user = getUser();
+    if(!user){ location.href = 'login.html'; return; }
+  }
   renderVIPList();
 
   document.addEventListener('click', async (e)=>{
+    if(e.target && e.target.classList.contains('view-vip')){
+      location.href = 'vip.html';
+      return;
+    }
+
     if(e.target && e.target.classList.contains('buy-vip')){
       const button = e.target;
       const stopLoading = setLoading(button, true);
@@ -99,7 +111,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       }
       if(!u){ stopLoading(); location.href='login.html'; return; }
       if(!plan){ stopLoading(); showToast('Unable to find the selected VIP plan.', 'error'); return; }
-      if(!u.balance || u.balance < plan.deposit){ stopLoading(); showToast('You must deposit before buying this VIP plan.', 'warning'); return; }
+      if(!u.balance || u.balance < plan.deposit){ stopLoading(); showToast('You must have sufficient wallet balance to purchase this VIP plan.', 'warning'); return; }
       if(u.activePlan){ stopLoading(); showToast('Only one VIP plan can be active at a time.', 'warning'); return; }
       try{
         const now = Date.now(); const nextPayoutAt = now + 24*60*60*1000;

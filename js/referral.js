@@ -3,7 +3,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const refLinkEl = document.getElementById('ref-link');
   const countEl = document.getElementById('ref-count');
   const earnEl = document.getElementById('ref-earn');
-  if(refLinkEl){ refLinkEl.value = location.origin + location.pathname + '?ref=' + (u.phone||''); }
+  const referralCode = u.referralCode || u.id || u.phone || '';
+  const referralUrl = `${location.origin}/register.html?ref=${encodeURIComponent(referralCode)}`;
+  if(refLinkEl){ refLinkEl.value = referralUrl; }
   if(countEl) countEl.textContent = 'Referrals: ' + (u.referrals||0);
   if(earnEl) earnEl.textContent = 'Referral Earnings: ₦' + formatN(u.refEarnings||0);
   document.getElementById('copy-ref')?.addEventListener('click', async () => {

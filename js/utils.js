@@ -18,11 +18,11 @@ async function apiFetch(url, options = {}){
 
 // Minimal API wrapper that falls back to localStorage for demo mode
 const api = {
-  register: async ({ fullName, phone, password }) => {
+  register: async ({ fullName, phone, password, referralCode }) => {
     if(USE_API){
-      return apiFetch(`${API_BASE}/auth/register`, { method:'POST', body: { fullName, phone, password } });
+      return apiFetch(`${API_BASE}/auth/register`, { method:'POST', body: { fullName, phone, password, referralCode } });
     }
-    const user = { fullName, phone, password, balance:500, welcomeBonus:500, earnings:0, referrals:0, refEarnings:0, activePlan:null };
+    const user = { fullName, phone, password, balance:500, welcomeBonus:500, earnings:0, referrals:0, refEarnings:0, activePlan:null, referralCode: referralCode || null };
     saveUser(user);
     return { user };
   },

@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="muted">Amount: ₦${formatN(item.amount)}</div>
         <div class="muted">Reference: ${item.transactionReference || '—'}</div>
         <div class="muted">Status: ${item.status || 'pending'}</div>
+        ${item.screenshot ? `<div class="muted">Screenshot attached:</div><img src="${item.screenshot}" alt="Deposit screenshot" style="max-width:100%;border-radius:14px;margin-top:8px;"/>` : ''}
         <div class="button-row">
           <button class="btn primary" data-action="approve-deposit" data-id="${item.id}">Approve</button>
           <button class="btn ghost" data-action="reject-deposit" data-id="${item.id}">Reject</button>
@@ -104,14 +105,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       transactionsList.innerHTML = '<div class="muted">No transactions found.</div>';
       return;
     }
-    transactionsList.innerHTML = list.slice(0, 8).map((transaction) => `
+    const labelMap = {
+      deposit: 'Deposit Submitted',
+      withdrawal: 'Withdrawal Submitted',
+      referral_earnings: 'Referral Earnings',
+      vip_purchase: 'VIP Purchase',
+      welcome_bonus: 'Welcome Bonus',
+      wallet_credit: 'Wallet Credit',
+      wallet_debit: 'Wallet Debit'
+    };
+    transactionsList.innerHTML = list.slice(0, 8).map((transaction) => {
+      const title = labelMap[transaction.type] || (transaction.type || 'Transaction').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      return `
       <article class="note-panel card" style="margin:12px 0;">
-        <div><strong>${transaction.type || 'transaction'}</strong></div>
+        <div><strong>${title}</strong></div>
         <div class="muted">Amount: ₦${formatN(transaction.amount || 0)}</div>
         <div class="muted">Status: ${transaction.status || 'pending'}</div>
         <div class="muted">Created: ${new Date(transaction.createdAt || Date.now()).toLocaleString()}</div>
       </article>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function renderDepositAccounts(items) {

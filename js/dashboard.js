@@ -149,16 +149,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     transactionsListEl.innerHTML = list.map((transaction) => {
       const type = transaction.type || 'transaction';
-      const icon = type === 'deposit' ? '💳' : type === 'withdrawal' ? '🏦' : '✨';
+      const labelMap = {
+        deposit: 'Deposit Submitted',
+        withdrawal: 'Withdrawal Submitted',
+        referral_earnings: 'Referral Earnings',
+        vip_purchase: 'VIP Purchase',
+        welcome_bonus: 'Welcome Bonus',
+        wallet_credit: 'Wallet Credit',
+        wallet_debit: 'Wallet Debit'
+      };
+      const title = labelMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const icon = type === 'deposit' ? '💳' : type === 'withdrawal' ? '🏦' : type === 'referral_earnings' ? '🤝' : type === 'vip_purchase' ? '⭐' : type === 'welcome_bonus' ? '🎁' : '✨';
       const amountClass = type === 'withdrawal' ? 'negative' : 'positive';
       const sign = type === 'withdrawal' ? '-' : '+';
+      const reference = transaction.meta?.transactionReference || transaction.transactionReference || '';
       return `
         <div class="transaction-row">
           <div class="transaction-left">
             <div class="transaction-icon">${icon}</div>
             <div class="transaction-meta">
-              <strong>${type}</strong>
+              <strong>${title}</strong>
               <div class="muted">${new Date(transaction.createdAt || Date.now()).toLocaleDateString()}</div>
+              ${reference ? `<div class="muted">Reference: ${reference}</div>` : ''}
             </div>
           </div>
           <div class="transaction-right">

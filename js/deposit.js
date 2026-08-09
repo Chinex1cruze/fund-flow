@@ -13,12 +13,45 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const paymentForm = document.getElementById('payment-form');
   const paymentAmountInput = document.getElementById('payment-amount');
   const paymentTxInput = document.getElementById('payment-transaction-reference');
+  const paymentScreenshotInput = document.getElementById('payment-screenshot');
   const paymentBack = document.getElementById('payment-back');
+  const depositAccountDetails = document.getElementById('deposit-account-details');
+  const depositPlaceholderCard = document.getElementById('deposit-placeholder-card');
+  const depositInstructions = document.getElementById('deposit-instructions');
 
   if(!step1Form) return;
 
-  const depositPlaceholderCard = document.getElementById('deposit-placeholder-card');
   const paymentAmountLabel = document.getElementById('payment-amount-label');
+
+  async function loadAssignedAccount(){
+    if(!depositAccountDetails) return;
+    try{
+      const response = await api.getDepositAccount();
+      const account = response.account || {};
+      depositAccountDetails.style.display = 'block';
+      depositAccountDetails.innerHTML = `
+        <div class="paystack-account-grid">
+          <div>
+            <div class="account-stat-label">Bank</div>
+            <div class="account-stat-value">${account.bankName || 'Sterling Bank'}</div>
+          </div>
+          <div>
+            <div class="account-stat-label">Account Number</div>
+            <div class="account-stat-value">${account.accountNumber || '0142489003'}</div>
+          </div>
+          <div>
+            <div class="account-stat-label">Account Name</div>
+            <div class="account-stat-value">${account.accountName || 'Chinedu Chima'}</div>
+          </div>
+        </div>
+        <div class="muted" style="margin-top:16px;">Use the account details above for your deposit. You will receive a unique payment reference when you enter an amount and continue.</div>
+      `;
+    }catch(err){
+      depositAccountDetails.style.display = 'none';
+    }
+  }
+
+  loadAssignedAccount();
   const paymentCountdownLabel = document.getElementById('payment-countdown');
   const closeCountdownLabel = document.getElementById('close-countdown');
   let paymentTimerId = null;
@@ -98,10 +131,14 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     depositPlaceholderCard?.classList.add('hidden');
     paymentAmountInput.value = amt;
     if(paymentAmountLabel) paymentAmountLabel.textContent = `₦${formatN(amt)}`;
-    paymentTxInput.value = '';
     paymentStep.classList.remove('hidden');
     if(paymentCountdownLabel) paymentCountdownLabel.textContent = '10:00';
     if(closeCountdownLabel) closeCountdownLabel.textContent = '03:00';
+    if(paymentTxInput){
+      paymentTxInput.value = '';
+      paymentTxInput.readOnly = true;
+    }
+    if(depositInstructions) depositInstructions.style.display = 'block';
 
     // Load assigned account into the payment card area
     paymentAccountLoader.classList.remove('hidden');
@@ -109,6 +146,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     try{
       const response = await api.getDepositAccount({ amount: amt });
       const account = response.account || {};
+      const reference = (account.paymentReference || account.transactionReference || '—');
 
       // configure timers from server session if present
       clearPaymentTimers();
@@ -153,18 +191,27 @@ document.addEventListener('DOMContentLoaded', async ()=>{
             <div class="account-stat-value">${account.accountName || '—'}</div>
           </div>
           <div>
-            <div class="account-stat-label">Status</div>
-            <div class="account-stat-value">${account.status || 'Active'}</div>
+            <div class="account-stat-label">Payment reference</div>
+            <div class="account-stat-value">${reference}</div>
           </div>
         </div>
         <div class="account-copy-row">
           <button type="button" id="copy-account-number-2" class="btn primary">Copy Account Number</button>
+          <button type="button" id="copy-payment-reference" class="btn ghost">Copy Reference</button>
         </div>
       `;
+      paymentTxInput.value = reference;
       document.getElementById('copy-account-number-2')?.addEventListener('click', async () => {
-        try{ await navigator.clipboard.writeText(account.accountNumber || ''); showToast('Account Number copied.', 'success'); }
+        try{ await navigator.clipboard.writeText(account.accountNumber || ''); showToast('Account number copied.', 'success'); }
         catch(err){ showToast('Unable to copy the account number', 'warning'); }
       });
+      document.getElementById('copy-payment-reference')?.addEventListener('click', async () => {
+        try{ await navigator.clipboard.writeText(reference); showToast('Payment reference copied.', 'success'); }
+        catch(err){ showToast('Unable to copy the payment reference', 'warning'); }
+      });
+      if(depositInstructions){
+        depositInstructions.innerHTML = `<div class="muted">${response.paymentInstructions || 'After transferring the money, include the payment reference shown above in your bank transfer narration/description. This helps the administrator identify and verify your payment faster. After payment, submit your deposit request and wait for approval.'}</div>`;
+      }
       paymentAccountLoader.classList.add('hidden');
     }catch(err){
       paymentAccountLoader.classList.add('hidden');
@@ -190,8 +237,20 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const amt = Number(paymentAmountInput.value);
     const txRef = paymentTxInput.value.trim();
     if(!txRef){ stopLoading(); showToast('Transfer reference is required after sending your bank transfer.', 'warning'); return; }
+    let screenshotData = null;
+    if(paymentScreenshotInput && paymentScreenshotInput.files && paymentScreenshotInput.files[0]){
+      const file = paymentScreenshotInput.files[0];
+      try{
+        screenshotData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }catch(err){ console.warn('Screenshot could not be read', err); }
+    }
     try{
-      const res = await api.deposit({ amount: amt, transactionReference: txRef, screenshot: null });
+      const res = await api.deposit({ amount: amt, transactionReference: txRef, screenshot: screenshotData });
       if(res && res.deposit){ showToast('Deposit submitted and pending verification by admin.', 'success'); setTimeout(()=> location.href = 'dashboard.html', 800); }
       else showToast('Deposit submission failed', 'error');
     }catch(err){ console.error(err); showToast(err.message || 'Deposit failed', 'error'); }

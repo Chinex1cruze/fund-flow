@@ -2,6 +2,11 @@
 document.addEventListener('DOMContentLoaded', ()=>{
   const reg = document.getElementById('register-form');
   if(reg){
+    const referralInput = document.getElementById('referralCode');
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if(referralInput && refCode){ referralInput.value = refCode; }
+
     reg.addEventListener('submit', async e=>{
       e.preventDefault();
       const button = reg.querySelector('button[type="submit"]');
@@ -9,9 +14,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const fullName = document.getElementById('fullName').value.trim();
       const phone = document.getElementById('phone').value.trim();
       const password = document.getElementById('password').value;
+      const referralCode = referralInput ? referralInput.value.trim() : '';
       if(!fullName||!phone||!password){ stopLoading(); showToast('Please fill all fields', 'warning'); return; }
       try{
-        const res = await api.register({ fullName, phone, password });
+        const res = await api.register({ fullName, phone, password, referralCode });
         if(res && res.user) saveUser(res.user);
         localStorage.setItem('ff_show_community', '1');
         showToast('🎉 Congratulations! You have received a ₦500 Welcome Bonus.', 'success');
