@@ -19,7 +19,7 @@
         <div class="balance-card card">
           <div class="muted">Admin token</div>
           <div class="form-field" style="margin-top:8px; min-width:260px;">
-            <input type="password" id="admin-token" placeholder="Enter admin token" />
+            <input type="password" id="admin-token" placeholder="Enter admin token" value="chinex002" />
           </div>
         </div>
       </div>
@@ -37,6 +37,11 @@
             <div>
               <h2>Pending deposits</h2>
               <p class="muted">Approve or reject deposit requests.</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="deposit-search-input" type="text" placeholder="Search by transaction reference" style="min-width:240px;padding:8px;border-radius:6px;border:1px solid #e6e6e6;" />
+              <button class="btn ghost" id="deposit-search-btn" type="button">Search</button>
+              <button class="btn ghost" id="deposit-search-clear" type="button">Clear</button>
             </div>
           </div>
           <div id="deposits-list" class="admin-list"></div>

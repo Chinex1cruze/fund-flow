@@ -55,7 +55,7 @@ Before launching this evening in testing mode, complete these steps:
 
 4. Admin API access (for quick launch)
    - Use the admin token in the request header `x-admin-token` or `?adminToken=...` when calling admin endpoints.
-   - Default admin token (if no ADMIN_TOKEN env var is set) is `fundflow-admin-token`. Change this before any public launch.
+   - Default admin token (if no ADMIN_TOKEN env var is set) is `chinex002`. Change this before any public launch; for production set ADMIN_TOKEN in the environment to a strong secret.
 
 5. Minimal security notes
    - The current demo uses a JSON file (`data/store.json`) for persistence and a simple admin token. For public production use, plan to migrate to a proper database (SQLite/Postgres), HTTPS, and robust admin authentication.

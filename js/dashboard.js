@@ -9,8 +9,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const announcementBannerEl = document.getElementById('announcement-banner');
   const announcementContentEl = document.getElementById('announcement-content');
   const notificationCountEl = document.getElementById('notification-count');
-  const notificationsPanelEl = document.getElementById('notifications-panel');
-  const notificationsListEl = document.getElementById('notifications-list');
   const activePlanEl = document.getElementById('active-plan-details');
   const transactionsListEl = document.getElementById('transactions-list');
   const profilePic = document.getElementById('user-profile-picture');
@@ -73,29 +71,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function renderAnnouncements(items){
     const list = items || [];
-    if(!announcementBannerEl) return;
     if(!list.length){
       announcementBannerEl.classList.add('hidden');
       return;
     }
     announcementBannerEl.classList.remove('hidden');
     announcementContentEl.innerHTML = list.map((item) => `<div><strong>${item.title || 'FundFlow Update'}</strong> <div>${item.message || ''}</div></div>`).join('');
-  }
-
-  function renderNotifications(items){
-    if(!notificationsListEl) return;
-    const list = (items || []).slice(0, 10);
-    if(!list.length){
-      notificationsListEl.innerHTML = '<div class="muted">No notifications yet.</div>';
-      return;
-    }
-    notificationsListEl.innerHTML = list.map((notification) => {
-      return `
-        <div class="notification-item">
-          <div class="row"><strong>${notification.title || 'Notification'}</strong><span class="muted">${new Date(notification.createdAt || Date.now()).toLocaleString()}</span></div>
-          <div class="muted">${notification.text || ''}</div>
-        </div>`;
-    }).join('');
   }
 
   function renderVipCountdown(data){
@@ -140,7 +121,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderTransactions(items){
-    if(!transactionsListEl) return;
     const list = (items || []).slice(0, 6);
     if(!list.length){
       transactionsListEl.innerHTML = '<div class="muted">No transactions yet.</div>';
@@ -190,16 +170,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderVipCountdown(currentUser);
     renderActivePlan(currentUser);
     renderTransactions(transactionsRes.transactions || []);
-    renderNotifications(notificationsRes.notifications || []);
-    if(notificationCountEl) notificationCountEl.textContent = (notificationsRes.notifications || []).length;
+    notificationCountEl.textContent = (notificationsRes.notifications || []).length;
   }
 
   await loadDashboardData();
-
-  document.getElementById('notifications-button')?.addEventListener('click', () => {
-    if(!notificationsPanelEl) return;
-    notificationsPanelEl.classList.toggle('hidden');
-  });
 
   const communityModal = document.getElementById('community-modal');
   const shouldShowCommunity = localStorage.getItem('ff_show_community') === '1' && !localStorage.getItem('ff_community_dismissed');

@@ -172,6 +172,16 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     }
 
     paymentStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Make the confirm button prominent: focus and give a short pulse animation to draw attention.
+    try{
+      const confirmBtn = document.getElementById('confirm-payment-btn');
+      if(confirmBtn){
+        confirmBtn.focus({ preventScroll: true });
+        confirmBtn.classList.add('pulse');
+        setTimeout(() => confirmBtn.classList.remove('pulse'), 1000);
+      }
+    }catch(e){ /* ignore */ }
   });
 
   paymentBack?.addEventListener('click', () => {
@@ -180,6 +190,27 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     step1Form.classList.remove('hidden');
     depositPlaceholderCard?.classList.remove('hidden');
     step1Form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Allow pressing SPACE to confirm payment when the payment step is visible.
+  document.addEventListener('keydown', (ev) => {
+    try {
+      if(ev.code !== 'Space') return;
+      // Don't trigger while typing in inputs, textareas, selects, buttons or content editable areas
+      const active = document.activeElement;
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'BUTTON' || active.tagName === 'SELECT' || active.isContentEditable)) return;
+      if(!paymentStep || paymentStep.classList.contains('hidden')) return;
+      ev.preventDefault();
+      const submitBtn = paymentForm?.querySelector('button[type="submit"]');
+      if(submitBtn) {
+        // give a small visual focus feedback
+        submitBtn.focus({ preventScroll: true });
+        submitBtn.click();
+      }
+    } catch (e) {
+      // swallow errors to avoid breaking the page
+      console.error('Spacebar handler error', e);
+    }
   });
 
   paymentForm?.addEventListener('submit', async (e) => {

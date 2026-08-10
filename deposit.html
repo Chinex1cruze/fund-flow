@@ -95,8 +95,9 @@
             <label>Transaction reference / narration</label>
             <input type="text" id="payment-transaction-reference" placeholder="Paste the transfer reference or narration" required>
           </div>
+          <div id="spacebar-hint" class="muted" style="margin-top:8px">You can press <strong>SPACE</strong> to confirm payment when ready.</div>
           <div style="display:flex;gap:8px;margin-top:8px;">
-            <button class="btn primary" type="submit">I have made payment</button>
+          <button id="confirm-payment-btn" class="btn primary large-confirm" type="submit">Confirm Payment</button>
             <button class="btn ghost" type="button" id="payment-back">Back</button>
           </div>
         </form>
