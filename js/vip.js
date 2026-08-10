@@ -41,13 +41,17 @@ async function renderVIPList(){
     if(res && res.user) saveUser(res.user);
   }catch(e){ u = cached; }
 
+  const isPreviewPage = location.pathname && location.pathname.toLowerCase().endsWith('vip.html');
+
   plans.forEach(plan=>{
     const hasActive = u && u.activePlan && u.activePlan.id === plan.id;
     const card = document.createElement('div'); card.className='vip-card card';
+    const btnLabel = isPreviewPage ? 'Preview' : 'Buy Now';
+    const btnClass = isPreviewPage ? 'btn ghost vip-preview' : 'btn primary buy-vip';
     card.innerHTML = `
       <div class="row"><strong>${plan.name}</strong><div class="muted" style="margin-left:auto">Deposit ₦${formatN(plan.deposit)}</div></div>
       <div class="meta">Daily Reward: ₦${formatN(plan.daily)}</div>
-      <div class="row mt-2"><button class="btn primary buy-vip" data-id="${plan.id}">Buy Now</button>
+      <div class="row mt-2"><button class="${btnClass}" data-id="${plan.id}">${btnLabel}</button>
       <div class="muted" style="margin-left:auto" data-countdown-id="${plan.id}">24:00:00</div></div>
     `;
     list.appendChild(card);
@@ -84,8 +88,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
   renderVIPList();
 
   document.addEventListener('click', async (e)=>{
-    if(e.target && e.target.classList.contains('buy-vip')){
-      const button = e.target;
+    const tgt = e.target;
+    // If this is a preview button on the public VIP page
+    if(tgt && tgt.classList.contains('vip-preview')){
+      showToast('VIP plans are preview-only on this page. Please login and purchase from your dashboard.', 'info');
+      return;
+    }
+
+    if(tgt && tgt.classList.contains('buy-vip')){
+      const button = tgt;
       const stopLoading = setLoading(button, true);
       const id = Number(button.dataset.id);
       const plans = await loadVIPPlans();

@@ -157,14 +157,30 @@ document.addEventListener('DOMContentLoaded', async ()=>{
             <div class="account-stat-value">${account.status || 'Active'}</div>
           </div>
         </div>
-        <div class="account-copy-row">
-          <button type="button" id="copy-account-number-2" class="btn primary">Copy Account Number</button>
-        </div>
-      `;
+          <div style="margin-top:12px;">
+            <div class="muted">Payment reference</div>
+            <div class="account-stat-value" id="payment-reference">${account.paymentReference || '—'}</div>
+            <div class="muted" style="margin-top:6px">Include this reference in your bank transfer narration/description. Example: ${account.paymentReference || 'FF-824915'}</div>
+          </div>
+          <div class="account-copy-row">
+            <button type="button" id="copy-account-number-2" class="btn primary">Copy Account Number</button>
+            <button type="button" id="copy-payment-ref" class="btn ghost">Copy Reference</button>
+          </div>
+        `;
       document.getElementById('copy-account-number-2')?.addEventListener('click', async () => {
         try{ await navigator.clipboard.writeText(account.accountNumber || ''); showToast('Account Number copied.', 'success'); }
         catch(err){ showToast('Unable to copy the account number', 'warning'); }
       });
+      document.getElementById('copy-payment-ref')?.addEventListener('click', async () => {
+        try{ await navigator.clipboard.writeText(account.paymentReference || ''); showToast('Payment reference copied.', 'success'); }
+        catch(err){ showToast('Unable to copy the payment reference', 'warning'); }
+      });
+
+      // prefill the hidden tx input so the server receives the same reference when confirming
+      if(paymentTxInput) paymentTxInput.value = account.paymentReference || '';
+      // make the tx input readonly so users don't accidentally change it
+      if(paymentTxInput) paymentTxInput.setAttribute('readonly', 'true');
+
       paymentAccountLoader.classList.add('hidden');
     }catch(err){
       paymentAccountLoader.classList.add('hidden');

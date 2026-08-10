@@ -35,8 +35,8 @@ const PAYSTACK_PREFERRED_BANK = process.env.PAYSTACK_PREFERRED_BANK || 'wema-ban
 const TOKEN_NAME = 'ff_token';
 const PAYSTACK_API_BASE = 'https://api.paystack.co';
 const DEFAULT_DEPOSIT_ACCOUNTS = [
-  { id: 'acct-access', bankName: 'Access Bank', accountNumber: '1909738594', accountName: 'Chinedu Chima', status: 'active', createdAt: Date.now() },
-  { id: 'acct-sterling', bankName: 'Sterling Bank', accountNumber: '0142489003', accountName: 'Chinedu Chima', status: 'active', createdAt: Date.now() }
+  { id: 'acct-sterling', bankName: 'Sterling Bank', accountNumber: '0142489003', accountName: 'Chinedu Chima', status: 'active', createdAt: Date.now() },
+  { id: 'acct-access', bankName: 'Access Bank', accountNumber: '1909738594', accountName: 'Chinedu Chima', status: 'active', createdAt: Date.now() }
 ];
 const VIP_PLANS = [
   { id: 1, name: 'VIP 1', deposit: 3000, daily: 700 },
@@ -69,9 +69,9 @@ function ensureDataFile(){
       depositAccountCursor: 0,
       paymentSettings: {
         mode: process.env.PAYMENT_MODE || 'testing',
-        bankName: process.env.PAYMENT_BANK_NAME || 'Access bank',
-        accountNumber: process.env.PAYMENT_ACCOUNT_NUMBER || '1909738593',
-        accountName: process.env.PAYMENT_ACCOUNT_NAME || 'chinedu Chima'
+        bankName: process.env.PAYMENT_BANK_NAME || 'Sterling Bank',
+        accountNumber: process.env.PAYMENT_ACCOUNT_NUMBER || '0142489003',
+        accountName: process.env.PAYMENT_ACCOUNT_NAME || 'Chinedu Chima'
       }
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
@@ -289,6 +289,10 @@ app.post('/api/auth/register', (req, res) => {
   if(findUserByPhone(data, phone)) return res.status(409).json({ message: 'Phone number already registered' });
   const id = 'user-' + Date.now();
   const passwordHash = bcrypt.hashSync(password, 10);
+  // Generate a unique referral code for the new user
+  const referralCode = 'REF-' + Math.floor(Math.random() * 900000 + 100000);
+  const referralLink = (process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(referralCode)}`;
+
   const user = {
     id,
     fullName,
@@ -299,8 +303,24 @@ app.post('/api/auth/register', (req, res) => {
     earnings: 0,
     referrals: 0,
     refEarnings: 0,
-    activePlan: null
+    activePlan: null,
+    // referral fields
+    referralCode,
+    referralLink,
+    referredBy: null,
+    referralRewardProcessed: false
   };
+
+  // If a referral code was provided in body or query (e.g., ?ref=...), associate the referrer
+  const providedRef = (req.body && req.body.referralCode) || (req.query && req.query.ref) || null;
+  if(providedRef){
+    const referrer = (data.users || []).find(u => String(u.referralCode).toLowerCase() === String(providedRef).toLowerCase());
+    if(referrer){
+      user.referredBy = referrer.id;
+      // do not credit earnings now — only after the referred user's first approved deposit
+    }
+  }
+
   assignDepositAccountToUser(data, user);
   data.users.push(user);
   createNotification(data, { userId: user.id, title: 'Welcome bonus', text: 'Your account has been created and your welcome bonus has been credited.', type: 'success' });
@@ -394,6 +414,8 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
     while(existingNumbers.has(accountNumber)) accountNumber = genAccountNumber();
 
     const now = Date.now();
+    // generate a unique payment reference for this payment session (shown to user)
+    const paymentReference = `FF-${Math.floor(Math.random()*900000+100000)}`;
     const virtual = {
       id: 'va-' + now,
       userId: user.id,
@@ -402,6 +424,7 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
       accountName: base.accountName || user.fullName || 'FundFlow',
       status: 'active',
       amount: amount,
+      paymentReference: paymentReference,
       createdAt: now,
       expiresAt: now + 10 * 60 * 1000, // payment window 10 minutes
       closeAt: now + 3 * 60 * 1000 // auto-close after 3 minutes
@@ -509,12 +532,15 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
   const { amount, transactionReference, screenshot } = req.body || {};
   const depositAmount = Number(amount);
   if(!depositAmount || depositAmount <= 0) return res.status(400).json({ message: 'Invalid deposit amount' });
-  if(!transactionReference) return res.status(400).json({ message: 'Transaction reference is required' });
 
   const data = readData();
   data.deposits = data.deposits || [];
+
+  // If no transactionReference was provided by the client, generate one server-side
+  const txRef = String(transactionReference || `FF-${Math.floor(Math.random()*900000+100000)}`);
+
   // Prevent duplicate transaction references
-  if(data.deposits.find(d => d.transactionReference && d.transactionReference.toLowerCase() === String(transactionReference).toLowerCase())){
+  if(data.deposits.find(d => d.transactionReference && d.transactionReference.toLowerCase() === txRef.toLowerCase())){
     return res.status(409).json({ message: 'Duplicate transaction reference' });
   }
 
@@ -525,16 +551,19 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
     id: 'dep-' + Date.now(),
     userId: user.id,
     amount: depositAmount,
-    transactionReference: String(transactionReference),
+    transactionReference: txRef,
     screenshot: screenshot || null,
     status: 'pending',
     statusHistory: [{ status: 'pending', at: Date.now() }],
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    referralProcessed: false
   };
 
   data.deposits.push(deposit);
   // create a pending transaction record
   recordTransaction(data, { userId: user.id, type: 'deposit', amount: depositAmount, status: 'pending', meta: { depositId: deposit.id, transactionReference: deposit.transactionReference } });
+  // notify user that deposit was submitted and include reference in message
+  createNotification(data, { userId: user.id, title: 'Deposit submitted', text: `Your deposit request of ₦${depositAmount} was submitted. Use reference ${deposit.transactionReference} in your bank transfer narration.`, type: 'info' });
   writeData(data);
   res.json({ deposit });
 });
@@ -551,6 +580,9 @@ app.post('/api/vips/buy', authMiddleware, (req, res) => {
   const now = Date.now();
   user.balance -= plan.deposit;
   user.activePlan = { id: plan.id, name: plan.name, deposit: plan.deposit, daily: plan.daily, startedAt: now, nextPayoutAt: now + 24 * 60 * 60 * 1000 };
+  // record transaction and create a notification
+  recordTransaction(data, { userId: user.id, type: 'vip_purchase', amount: plan.deposit, status: 'approved', meta: { planId: plan.id } });
+  createNotification(data, { userId: user.id, title: 'VIP Purchased', text: `${plan.name} purchased for ₦${plan.deposit}. Your daily reward is ₦${plan.daily}.`, type: 'success' });
   writeData(data);
   res.json({ user: sanitizeUser(user) });
 });
@@ -632,6 +664,28 @@ app.post('/api/admin/deposits/:id/approve', adminAuthMiddleware, (req, res) => {
   user.balance = (user.balance || 0) + deposit.amount;
   if(data.transactions) data.transactions.forEach(t => { if(t.meta && t.meta.depositId === deposit.id) t.status = 'approved'; });
   createNotification(data, { userId: deposit.userId, title: 'Deposit approved', text: `Your deposit of ₦${deposit.amount} has been approved and credited to your wallet.`, type: 'success' });
+
+  // Referral reward: credit 5% to the referrer when this is the referred user's FIRST approved deposit
+  try{
+    if(user.referredBy && !deposit.referralProcessed){
+      // check if there are earlier approved deposits for this referred user
+      const earlierApproved = (data.deposits || []).some(d => d.userId === user.id && d.status === 'approved' && d.id !== deposit.id && (d.createdAt || 0) < (deposit.createdAt || 0));
+      if(!earlierApproved){
+        const referrer = findUserById(data, user.referredBy);
+        if(referrer){
+          const reward = Number(((deposit.amount || 0) * 0.05).toFixed(2));
+          referrer.balance = (referrer.balance || 0) + reward;
+          referrer.refEarnings = (referrer.refEarnings || 0) + reward;
+          referrer.referrals = (referrer.referrals || 0) + 1;
+          // create transaction record for referral earnings
+          recordTransaction(data, { userId: referrer.id, type: 'referral', amount: reward, status: 'approved', meta: { referredUserId: user.id, depositId: deposit.id } });
+          createNotification(data, { userId: referrer.id, title: 'Referral reward received', text: `You received ₦${reward} (5% of ₦${deposit.amount}) as referral reward.`, type: 'success' });
+          deposit.referralProcessed = true;
+        }
+      }
+    }
+  }catch(e){ /* swallow any referral processing errors to avoid blocking deposit approval */ }
+
   addAuditLog(data, { adminToken: req.admin.token, action: 'approve_deposit', details: { depositId: deposit.id, userId: deposit.userId, amount: deposit.amount } });
   writeData(data);
   res.json({ deposit, user: sanitizeUser(user) });
