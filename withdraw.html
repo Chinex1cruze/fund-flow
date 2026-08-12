@@ -25,9 +25,9 @@
       <div id="withdraw-status" class="note-panel card" style="display:none;">
         <h3>Withdrawal requirements</h3>
         <ul>
-          <li>You must have an active VIP plan before you can withdraw funds.</li>
           <li>Withdrawals are allowed only between 9:00 AM and 9:00 PM.</li>
-          <li>All requests require admin approval before payment.</li>
+          <li>All requests require admin approval before payout is initiated.</li>
+          <li>Please enter the account name exactly as it appears on the bank account. FundFlow cannot verify account names automatically at this time.</li>
         </ul>
       </div>
 
@@ -74,13 +74,12 @@
           </div>
           <div class="form-field">
             <label>Account Name</label>
-            <input type="text" id="account-name" readonly>
-            <input type="hidden" id="verification-id">
+            <input type="text" id="account-name" placeholder="Enter account name as on bank records" required>
           </div>
         </div>
 
         <div class="button-row">
-          <button type="button" id="verify-account" class="btn ghost">Verify bank details</button>
+          <button type="button" id="verify-account" class="btn ghost">Optional: Verify bank details</button>
           <button class="btn primary" type="submit">Submit Withdrawal Request</button>
         </div>
       </form>
