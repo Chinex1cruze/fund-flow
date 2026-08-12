@@ -158,13 +158,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     transactionsListEl.innerHTML = list.map((transaction) => {
       const type = transaction.type || 'transaction';
-      const icon = type === 'deposit' ? '💳' : type === 'withdrawal' ? '🏦' : '✨';
+      // use SVG icons for consistency and premium look
+      const iconSvg = type === 'deposit' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#fde68a" stroke-width="1.1"/></svg>'
+        : type === 'withdrawal' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 8v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8" stroke="#fde68a" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 12h10" stroke="#fde68a" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l2.6 5.9L20 9l-4 3.4L17 20l-5-3-5 3 1-7.6L2 9l5.4-1.1L12 2z" stroke="#fde68a" stroke-width="0.9" fill="rgba(251,191,36,0.04)"/></svg>';
       const amountClass = type === 'withdrawal' ? 'negative' : 'positive';
       const sign = type === 'withdrawal' ? '-' : '+';
       return `
         <div class="transaction-row">
           <div class="transaction-left">
-            <div class="transaction-icon">${icon}</div>
+            <div class="transaction-icon">${iconSvg}</div>
             <div class="transaction-meta">
               <strong>${type}</strong>
               <div class="muted">${new Date(transaction.createdAt || Date.now()).toLocaleDateString()}</div>

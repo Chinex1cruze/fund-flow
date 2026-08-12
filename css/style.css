@@ -53,6 +53,11 @@ button.btn, .btn{display:inline-block; padding:var(--btn-padding-vertical) var(-
 .btn.ghost{background:transparent; color:var(--primary); border:1px solid rgba(251,191,36,0.24)}
 .btn.ghost:hover{background:rgba(251,191,36,0.08)}
 input:disabled, textarea:disabled, select:disabled{opacity:0.6; background:rgba(255,255,255,0.04); cursor:not-allowed;}
+
+/* Improve default input sizing for mobile accessibility */
+.form-field input, .form-field textarea, .form-field select { font-size:16px; padding:12px 14px; border-radius:12px }
+.form-field label{font-size:13px; font-weight:600}
+
 button.btn:disabled{opacity:0.65; cursor:not-allowed; box-shadow:none;}
 
 .lead{color:var(--text-secondary)}
