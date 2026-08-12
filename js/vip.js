@@ -41,13 +41,15 @@ async function renderVIPList(){
     if(res && res.user) saveUser(res.user);
   }catch(e){ u = cached; }
 
-  const isPreviewPage = location.pathname && location.pathname.toLowerCase().endsWith('vip.html');
+  const isVIPPage = location.pathname && location.pathname.toLowerCase().endsWith('vip.html');
 
   plans.forEach(plan=>{
     const hasActive = u && u.activePlan && u.activePlan.id === plan.id;
     const card = document.createElement('div'); card.className='vip-card card';
-    const btnLabel = isPreviewPage ? 'Preview' : 'Buy Now';
-    const btnClass = isPreviewPage ? 'btn ghost vip-preview' : 'btn primary buy-vip';
+    // On the dedicated vip.html page users should be able to purchase (Buy Now).
+    // Other pages (e.g., home preview) may show a preview button.
+    const btnLabel = isVIPPage ? 'Buy Now' : 'Preview';
+    const btnClass = isVIPPage ? 'btn primary buy-vip' : 'btn ghost vip-preview';
     card.innerHTML = `
       <div class="row"><strong>${plan.name}</strong><div class="muted" style="margin-left:auto">Deposit ₦${formatN(plan.deposit)}</div></div>
       <div class="meta">Daily Reward: ₦${formatN(plan.daily)}</div>
@@ -90,8 +92,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.addEventListener('click', async (e)=>{
     const tgt = e.target;
     // If this is a preview button on the public VIP page
+    // allow preview buttons to redirect to vip page or prompt login; purchase handled by buy-vip
     if(tgt && tgt.classList.contains('vip-preview')){
-      showToast('VIP plans are preview-only on this page. Please login and purchase from your dashboard.', 'info');
+      // if user clicked a preview button on another page, send them to the dedicated VIP page
+      location.href = 'vip.html';
       return;
     }
 
