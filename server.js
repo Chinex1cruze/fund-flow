@@ -76,7 +76,8 @@ function ensureDataFile(){
         mode: process.env.PAYMENT_MODE || 'testing',
         bankName: process.env.PAYMENT_BANK_NAME || 'Sterling Bank',
         accountNumber: process.env.PAYMENT_ACCOUNT_NUMBER || '0142489003',
-        accountName: process.env.PAYMENT_ACCOUNT_NAME || 'Chinedu Chima'
+       accountName: process.env.PAYMENT_ACCOUNT_NAME || 'Chinedu Chima',
+       withdrawalFee: 0.2
       }
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
@@ -96,6 +97,7 @@ function normalizeData(data){
   normalized.depositAccounts = normalized.depositAccounts && normalized.depositAccounts.length ? normalized.depositAccounts : DEFAULT_DEPOSIT_ACCOUNTS;
   normalized.depositAccountCursor = Number.isInteger(normalized.depositAccountCursor) ? normalized.depositAccountCursor : 0;
   normalized.paymentSettings = normalized.paymentSettings || {};
+  if(typeof normalized.paymentSettings.withdrawalFee === 'undefined') normalized.paymentSettings.withdrawalFee = 0.2;
 
   // Backfill referralCode and referralLink for existing users if missing, ensuring uniqueness
   const existingCodes = new Set((normalized.users || []).map(u => String(u.referralCode || '').toLowerCase()).filter(Boolean));
@@ -338,12 +340,21 @@ function adminAuthMiddleware(req, res, next){
 function getPaymentSettings(){
   const data = readData();
   const ds = data.paymentSettings || {};
+  const configuredFee = Number(ds.withdrawalFee ?? 0.2);
+  const normalizedFee = Number.isFinite(configuredFee) && configuredFee > 1 ? configuredFee / 100 : configuredFee;
   return {
     mode: process.env.PAYMENT_MODE || ds.mode || 'testing',
     bankName: process.env.PAYMENT_BANK_NAME || ds.bankName || 'Access bank',
     accountNumber: process.env.PAYMENT_ACCOUNT_NUMBER || ds.accountNumber || '1909738593',
-    accountName: process.env.PAYMENT_ACCOUNT_NAME || ds.accountName || 'chinedu Chima'
+    accountName: process.env.PAYMENT_ACCOUNT_NAME || ds.accountName || 'chinedu Chima',
+    withdrawalFee: Number.isFinite(normalizedFee) ? normalizedFee : 0.2
   };
+}
+
+function resolveWithdrawalFeeRate(data){
+  const configuredFee = Number((data && data.paymentSettings && data.paymentSettings.withdrawalFee) ?? 0.2);
+  const normalizedFee = Number.isFinite(configuredFee) && configuredFee > 1 ? configuredFee / 100 : configuredFee;
+  return Number.isFinite(normalizedFee) ? Math.max(0, normalizedFee) : 0.2;
 }
 
 function recordTransaction(data, { userId, type, amount, status, meta }){
@@ -854,9 +865,9 @@ app.post('/api/withdrawals', authMiddleware, (req, res) => {
   const available = Number(user.balance || 0);
   if(withdrawAmount > available) return res.status(400).json({ message: 'Insufficient balance' });
 
-  // Calculate withdrawal fee (configured in paymentSettings.withdrawalFee) — default to 0 if not configured
-  const fee = Number((data.paymentSettings && data.paymentSettings.withdrawalFee) || 0);
-  const netAmount = Math.max(0, withdrawAmount - fee);
+  const feeRate = resolveWithdrawalFeeRate(data);
+  const fee = Number((withdrawAmount * feeRate).toFixed(2));
+  const netAmount = Number((withdrawAmount - fee).toFixed(2));
 
   // Reserve funds immediately to protect the wallet from double-spend
   user.balance = Number(user.balance || 0) - withdrawAmount;
@@ -879,8 +890,8 @@ app.post('/api/withdrawals', authMiddleware, (req, res) => {
   };
 
   data.withdrawals.push(withdrawal);
-  // create a pending transaction record (debit)
-  recordTransaction(data, { userId: user.id, type: 'withdrawal', amount: withdrawAmount, status: 'pending', meta: { withdrawalId: withdrawal.id, ref } });
+  // create a pending transaction record (debit) with fee breakdown for audit and UI history
+  recordTransaction(data, { userId: user.id, type: 'withdrawal', amount: withdrawAmount, status: 'pending', meta: { withdrawalId: withdrawal.id, ref, fee, netAmount } });
   // notify user that withdrawal was submitted
   createNotification(data, { userId: user.id, title: 'Withdrawal submitted', text: `Your withdrawal request of ₦${withdrawAmount} has been submitted and is awaiting administrator approval. Ref: ${ref}`, type: 'info' });
   // create admin notification

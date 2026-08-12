@@ -79,7 +79,7 @@ const api = {
     if(USE_API){
       return apiFetch(`${API_BASE}/payment-settings`, { method: 'GET' });
     }
-    return { settings: { withdrawalFee: 0 } };
+    return { settings: { withdrawalFee: 0.2 } };
   },
 
   getReferrals: async () => {
