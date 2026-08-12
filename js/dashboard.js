@@ -205,8 +205,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <div class="note-panel" style="padding:10px;min-width:140px;"><div class="muted">Total referrals</div><div style="font-weight:700">${totalReferrals}</div></div>
-            <div class="note-panel" style="padding:10px;min-width:160px;"><div class="muted">Referral earnings</div><div style="font-weight:700">₦${formatN(totalReferralEarnings)}</div></div>
+            <div class="note-panel" style="padding:10px;min-width:120px;max-width:100%;"><div class="muted">Total referrals</div><div style="font-weight:700">${totalReferrals}</div></div>
+            <div class="note-panel" style="padding:10px;min-width:120px;max-width:100%;"><div class="muted">Referral earnings</div><div style="font-weight:700">₦${formatN(totalReferralEarnings)}</div></div>
           </div>
           <div>
             <h4>Recent referral rewards</h4>
