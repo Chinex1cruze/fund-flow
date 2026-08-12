@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
+const multer = require('multer');
 
 function loadDotEnvFile(){
   const envPath = path.join(__dirname, '.env');
@@ -55,6 +56,9 @@ const VIP_PLANS = [
 
 function ensureDataFile(){
   if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  // ensure uploads folder for screenshots
+  const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+  if(!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   if(!fs.existsSync(DATA_FILE)){
     const defaultData = {
       users: [],
@@ -602,6 +606,8 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
   createNotification(data, { userId: user.id, title: 'Deposit submitted', text: `Your deposit request of ₦${depositAmount} was submitted and is pending admin verification. Reference: ${deposit.transactionReference}`, type: 'info' });
   writeData(data);
 
+  res.json({ deposit });
+  return;
   // Ensure backingAccountId persisted for this deposit by re-resolving virtual session (edge-case when virtual created in separate request)
   try{
     const refreshed = readData();
