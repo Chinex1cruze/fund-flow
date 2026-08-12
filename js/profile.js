@@ -30,4 +30,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     localStorage.removeItem('ff_user');
     location.href = 'login.html';
   });
+
+  // copy referral code/link
+  const copyRefBtn = document.getElementById('copy-ref-code');
+  const copyLinkBtn = document.getElementById('copy-ref-link');
+  copyRefBtn?.addEventListener('click', () => {
+    const code = u.referralCode || '';
+    if(!code) return showToast('No referral code to copy', 'warning');
+    navigator.clipboard.writeText(code).then(() => showToast('Referral code copied', 'success')).catch(() => showToast('Unable to copy', 'error'));
+  });
+  copyLinkBtn?.addEventListener('click', () => {
+    const link = profileRefLink?.href || '';
+    if(!link) return showToast('No link to copy', 'warning');
+    navigator.clipboard.writeText(link).then(() => showToast('Referral link copied', 'success')).catch(() => showToast('Unable to copy', 'error'));
+  });
+
 });
