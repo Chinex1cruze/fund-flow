@@ -10,25 +10,37 @@
 @media(min-width:1024px){.container{padding:24px}}
 
 /* General mobile card and button sizing */
-.card{padding:12px}
-.btn{padding:12px 14px}
-.btn.large-confirm{min-width:200px; padding:12px 18px}
+.card{padding:14px}
+.btn{padding:14px 18px; font-size:15px; font-weight:600; border-radius:12px; min-height:48px; display:flex; align-items:center; justify-content:center}
+.btn.large-confirm{min-width:100%; padding:16px 20px; font-size:16px; min-height:52px}
+.btn small{padding:10px 12px; font-size:13px; min-height:40px}
 
 /* Brand and header tweaks */
-.brand-row .brand-image{width:44px; height:44px}
+.brand-row .brand-image{width:48px; height:48px}
+.brand-row .brand-name{font-size:16px}
 
 /* Dashboard avatar and name sizing */
-.dashboard-avatar-wrap{width:52px; height:52px}
-.dashboard-user-name{font-size:20px}
+.dashboard-avatar-wrap{width:56px; height:56px}
+.dashboard-avatar{border-radius:14px}
+.dashboard-greeting{font-size:12px; letter-spacing:0.1em}
+.dashboard-user-name{font-size:22px; font-weight:700}
 
 /* Wallet, actions and layout stacking on small screens */
-.wallet-card{padding:14px}
-.actions-grid{grid-template-columns:1fr; gap:8px}
+.wallet-card{padding:16px; border-radius:16px}
+.balance-amount{font-size:28px; font-weight:800}
+.actions-grid{grid-template-columns:1fr; gap:10px}
+.action{padding:14px 16px; border-radius:14px; min-height:60px; gap:12px; font-size:14px; font-weight:500}
+.action .action-icon{font-size:22px; width:32px}
 
-/* Form, filters and touch targets */
-.form-field input, .form-field select{padding:12px}
-.filter-row{padding:6px 0}
-.filter-btn{padding:8px 12px; border-radius:999px; white-space:nowrap; font-size:14px}
+/* Form, filters and touch targets — priority on comfortable mobile interaction */
+.form-field{gap:10px; margin-bottom:14px}
+.form-field label{font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary)}
+.form-field input, .form-field select, .form-field textarea{padding:14px 16px; font-size:16px; border-radius:12px; line-height:1.5; min-height:48px}
+.filter-row{padding:8px 0}
+.filter-btn{padding:10px 14px; border-radius:12px; font-size:13px; font-weight:500; min-height:40px}
+
+/* Icon pill sizing */
+.icon-pill{padding:12px 14px; border-radius:12px; min-height:44px; min-width:44px; display:flex; align-items:center; justify-content:center}
 
 /* Transactions list safe spacing */
 .transactions-list{padding-bottom:120px}
@@ -38,23 +50,37 @@
 
 /* Show mobile bottom navigation on small screens */
 @media (max-width:700px){
- .bottom-nav{display:flex; position:fixed; bottom:12px; left:12px; right:12px; justify-content:space-between; z-index:9999; gap:8px; box-shadow:0 14px 36px rgba(0,0,0,0.45);}
- .bottom-nav .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.02);color:var(--text-secondary);text-decoration:none}
+ .bottom-nav{display:flex; position:fixed; bottom:12px; left:12px; right:12px; justify-content:space-between; z-index:9999; gap:8px; box-shadow:0 14px 36px rgba(0,0,0,0.45); padding:10px}
+ .bottom-nav .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.02);color:var(--text-secondary);text-decoration:none; min-height:56px; min-width:56px; justify-content:center}
  .bottom-nav .nav-item.active{background:linear-gradient(90deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04)); color:#fff}
- .bottom-nav .nav-item span{font-size:11px}
+ .bottom-nav .nav-item span{font-size:11px; font-weight:500}
+ .bottom-nav .nav-icon{width:24px; height:24px}
+ /* Ensure page content has bottom padding so bottom-nav does not cover content */
+ .page{padding-bottom:calc(env(safe-area-inset-bottom,12px) + 96px)}
 }
 
 @media (min-width:701px){
  .bottom-nav{display:none}
 }
 
-/* Modal adjustments on small screens */
-.modal-card{padding:16px}
-.modal-card h2{font-size:18px}
+/* Modal adjustments on small screens — ensure readable and tappable */
+.modal-card{padding:20px; border-radius:20px; min-height:auto; max-height:90vh; overflow-y:auto}
+.modal-card h2{font-size:20px; font-weight:700; margin-bottom:14px}
+.modal-card p{font-size:14px; line-height:1.6; margin-bottom:14px}
+.modal-actions .btn{min-height:48px; font-size:14px}
+.modal-close{width:40px; height:40px; font-size:24px; border-radius:12px}
 
 /* Ensure no horizontal overflow for utility elements */
 img, .dashboard-banner, .deposit-hero-card, .modal-banner{max-width:100%; height:auto}
-.toast{max-width:calc(100% - 32px);}
+.toast{max-width:calc(100% - 32px); min-height:48px; padding:14px 16px; font-size:14px; border-radius:12px}
+
+/* Transaction list and item sizing */
+.transaction-row{padding:14px; border-radius:14px; min-height:60px}
+.transaction-icon{width:44px; height:44px; border-radius:12px}
+.transaction-meta strong{font-size:14px; font-weight:600}
+.transaction-meta .muted{font-size:12px; margin-top:4px}
+.transaction-amount{font-size:16px; font-weight:700}
+.transaction-right{text-align:right}
 
 /* Keep any page-specific responsive overrides allowed at min-width breakpoints */
 @media (min-width:431px) and (max-width:699px){

@@ -158,13 +158,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     transactionsListEl.innerHTML = list.map((transaction) => {
       const type = transaction.type || 'transaction';
-      const icon = type === 'deposit' ? '💳' : type === 'withdrawal' ? '🏦' : '✨';
+      // use SVG icons for consistency and premium look
+      const iconSvg = type === 'deposit' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#fde68a" stroke-width="1.1"/></svg>'
+        : type === 'withdrawal' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 8v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8" stroke="#fde68a" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 12h10" stroke="#fde68a" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l2.6 5.9L20 9l-4 3.4L17 20l-5-3-5 3 1-7.6L2 9l5.4-1.1L12 2z" stroke="#fde68a" stroke-width="0.9" fill="rgba(251,191,36,0.04)"/></svg>';
       const amountClass = type === 'withdrawal' ? 'negative' : 'positive';
       const sign = type === 'withdrawal' ? '-' : '+';
       return `
         <div class="transaction-row">
           <div class="transaction-left">
-            <div class="transaction-icon">${icon}</div>
+            <div class="transaction-icon">${iconSvg}</div>
             <div class="transaction-meta">
               <strong>${type}</strong>
               <div class="muted">${new Date(transaction.createdAt || Date.now()).toLocaleDateString()}</div>
@@ -213,16 +216,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       referralContentEl.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-            <div style="flex:1;min-width:120px;max-width:100%;"><div class="muted">Referral code</div><div style="font-weight:700">${code}</div></div>
-            <div style="flex:2;min-width:120px;max-width:100%;"><div class="muted">Referral link</div><div style="word-break:break-all">${link}</div></div>
+            <div style="flex:1;min-width:0;max-width:100%;"><div class="muted">Referral code</div><div style="font-weight:700">${code}</div></div>
+            <div style="flex:2;min-width:0;max-width:100%;"><div class="muted">Referral link</div><div style="word-break:break-all">${link}</div></div>
             <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
               <button class="btn" id="copy-ref-link">Copy</button>
               <button class="btn ghost" id="share-ref-link">Share</button>
             </div>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <div class="note-panel" style="padding:10px;min-width:120px;max-width:100%;"><div class="muted">Total referrals</div><div style="font-weight:700">${totalReferrals}</div></div>
-            <div class="note-panel" style="padding:10px;min-width:120px;max-width:100%;"><div class="muted">Referral earnings</div><div style="font-weight:700">₦${formatN(totalReferralEarnings)}</div></div>
+            <div class="note-panel" style="padding:10px;min-width:0;max-width:100%;"><div class="muted">Total referrals</div><div style="font-weight:700">${totalReferrals}</div></div>
+            <div class="note-panel" style="padding:10px;min-width:0;max-width:100%;"><div class="muted">Referral earnings</div><div style="font-weight:700">₦${formatN(totalReferralEarnings)}</div></div>
           </div>
           <div>
             <h4>Recent referral rewards</h4>
