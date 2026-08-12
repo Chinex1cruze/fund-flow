@@ -24,9 +24,9 @@
 .quick-actions h3{margin-top:0; margin-bottom:16px}
 .withdraw-card, .deposit-card{padding:24px; border-radius:24px; box-shadow:0 12px 38px rgba(15,23,42,0.25)}
 .withdraw-header{display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom:24px; flex-wrap:wrap}
-.balance-card{min-width:220px; padding:18px; border-radius:18px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.16);}
-.balance-card .muted{margin-bottom:8px; display:block; color:var(--text-secondary)}
-.balance-value{font-size:28px; font-weight:700; color:#fff; letter-spacing:0.02em}
+.balance-card{min-width:220px; padding:16px 18px; border-radius:16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.16);}
+.balance-card .muted{margin-bottom:6px; display:block; color:var(--text-secondary); font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; line-height:1.4}
+.balance-value{font-size:clamp(2.1rem, 6vw, 2.9rem); font-weight:800; color:#fff; letter-spacing:-0.05em; line-height:1.08}
 .section-heading{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:18px}
 .section-heading h2{margin:0}
 .status-pill{padding:6px 10px; border-radius:999px; background:rgba(37,99,235,0.12); border:1px solid rgba(37,99,235,0.3); color:#91c6ff; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em}
@@ -73,13 +73,13 @@
 #active-plan h3{margin-top:0}
 .dashboard-shell{padding-bottom:96px}
 
-/* Compact balance card tweaks — optimized for phone sizing */
-.balance-card-compact{padding:18px; border-radius:18px; background:linear-gradient(180deg, rgba(17,17,19,0.6), rgba(10,10,12,0.8)); border:1px solid rgba(251,191,36,0.12);}
-.balance-card-compact .balance-value{font-size:32px; font-weight:800; letter-spacing:0.02em; line-height:1.2}
-.balance-card-compact .muted{font-size:12px; font-weight:600; color:#fde68a; text-transform:uppercase; letter-spacing:0.08em}
-.eye-button{background:transparent;border:1px solid rgba(255,255,255,0.08);padding:10px;border-radius:12px;color:#fff;display:inline-grid;place-items:center;min-width:44px;min-height:44px;cursor:pointer;transition:all .18s ease}
+/* Balance card typography refinements only — no redesign */
+.balance-card-compact{padding:16px 18px; border-radius:16px; background:linear-gradient(180deg, rgba(17,17,19,0.6), rgba(10,10,12,0.8)); border:1px solid rgba(251,191,36,0.12);}
+.balance-card-compact .balance-value{font-size:clamp(2.1rem, 6vw, 2.9rem); font-weight:800; letter-spacing:-0.05em; line-height:1.08}
+.balance-card-compact .muted{font-size:11px; font-weight:700; color:#fde68a; text-transform:uppercase; letter-spacing:0.12em; line-height:1.4}
+.eye-button{background:transparent;border:1px solid rgba(255,255,255,0.08);padding:8px;border-radius:12px;color:#fff;display:inline-grid;place-items:center;min-width:40px;min-height:40px;cursor:pointer;transition:all .18s ease}
 .eye-button:hover{border-color:rgba(251,191,36,0.28);background:rgba(251,191,36,0.08)}
-.eye-button svg{width:20px; height:20px}
+.eye-button svg{width:18px; height:18px}
 
 /* Dashboard action row — optimal phone interaction */
 .dashboard-action-row{display:flex;gap:10px;flex-wrap:wrap; margin:14px 0}
