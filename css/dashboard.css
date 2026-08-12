@@ -4,41 +4,41 @@
 .wallet-card{padding:var(--space-md); border-radius:var(--radius); background:linear-gradient(180deg, rgba(37,99,235,0.10), rgba(15,23,42,0.92)); border:1px solid rgba(37,99,235,0.22); box-shadow:0 10px 26px rgba(2,6,23,0.35); min-height:72px; display:flex; align-items:center; justify-content:space-between}
 .wallet-card .muted{margin-bottom:10px; display:block; font-size:13px; letter-spacing:0.06em; text-transform:uppercase}
 .wallet-card div:last-child{font-size:22px; font-weight:700; color:#fff}
-.actions-grid{display:grid; grid-template-columns:1fr; gap:12px}
+.actions-grid{display:grid; grid-template-columns:1fr; gap:10px}
 @media (min-width:480px){
   .actions-grid{grid-template-columns:repeat(3,1fr)}
 }
-.action{display:block; padding:12px 14px; text-align:center; border-radius:14px; background:var(--card); color:var(--text-secondary); text-decoration:none; transition:all .18s ease; border:1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden; min-height:56px; display:flex; align-items:center; justify-content:center; gap:10px; font-size:15px}
-.action .action-icon{font-size:18px; display:inline-block; width:28px; text-align:center}
-.action span{display:block}
+.action{display:flex; align-items:center; justify-content:center; gap:8px; padding:11px 12px; text-align:center; border-radius:12px; background:var(--card); color:var(--text-secondary); text-decoration:none; transition:all .18s ease; border:1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden; min-height:52px; font-size:13px; font-weight:600; letter-spacing:0.01em}
+.action .action-icon{font-size:16px; display:inline-block; width:24px; text-align:center; line-height:1}
+.action span{display:block; line-height:1.2}
 .action::after{content:''; position:absolute; inset:auto 50% 0 50%; width:0; height:0; background:rgba(251,191,36,0.16); border-radius:999px; transition:all .3s ease}
 .action:hover::after{inset:-40% -30%; width:160%; height:200%}
-.action:hover{background:rgba(37,99,235,0.14); color:#fff; transform:translateY(-2px); border-color:rgba(251,191,36,0.28)}
-/* make action labels smaller on compact screens */
+.action:hover{background:rgba(37,99,235,0.14); color:#fff; transform:translateY(-1px); border-color:rgba(251,191,36,0.28)}
+/* refine quick action sizing for compact screens */
 @media(max-width:420px){
-  .action{padding:10px 12px; font-size:13px; min-height:56px}
-  .action .action-icon{width:26px}
+  .action{padding:9px 10px; font-size:12.5px; min-height:50px}
+  .action .action-icon{width:22px; font-size:15px}
   .actions-grid{grid-template-columns:repeat(4,1fr); gap:8px}
 }
 .quick-actions{padding:22px}
 .quick-actions h3{margin-top:0; margin-bottom:16px}
-.withdraw-card, .deposit-card{padding:24px; border-radius:24px; box-shadow:0 12px 38px rgba(15,23,42,0.25)}
-.withdraw-header{display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom:24px; flex-wrap:wrap}
+.withdraw-card, .deposit-card{padding:18px 16px; border-radius:20px; box-shadow:0 12px 38px rgba(15,23,42,0.25)}
+.withdraw-header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; flex-wrap:wrap}
 .balance-card{min-width:220px; padding:16px 18px; border-radius:16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.16);}
 .balance-card .muted{margin-bottom:6px; display:block; color:var(--text-secondary); font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; line-height:1.4}
 .balance-value{font-size:clamp(2.1rem, 6vw, 2.9rem); font-weight:800; color:#fff; letter-spacing:-0.05em; line-height:1.08}
 .section-heading{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:18px}
 .section-heading h2{margin:0}
 .status-pill{padding:6px 10px; border-radius:999px; background:rgba(37,99,235,0.12); border:1px solid rgba(37,99,235,0.3); color:#91c6ff; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em}
-.form-grid{display:grid; gap:18px}
-.form-field{display:flex; flex-direction:column; gap:10px}
-.form-field label{color:var(--text-secondary); font-size:14px}
-.form-field input, .form-field select{width:100%; margin-top:0; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:var(--text-main); box-sizing:border-box}
+.form-grid{display:grid; gap:16px}
+.form-field{display:flex; flex-direction:column; gap:8px}
+.form-field label{color:var(--text-secondary); font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase}
+.form-field input, .form-field select{width:100%; margin-top:0; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:var(--text-main); box-sizing:border-box; min-height:48px; font-size:16px}
 .form-field input:readonly{opacity:0.88}
-.note-panel{padding:18px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.16); margin:24px 0;}
+.note-panel{padding:16px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.16); margin:18px 0;}
 .note-panel h3{margin-top:0; font-size:16px; color:#fff}
 .note-panel ul{margin:12px 0 0 18px; color:var(--text-secondary);}
-.note-panel li{margin-bottom:10px; line-height:1.6;}
+.note-panel li{margin-bottom:10px; line-height:1.6; font-size:14px;}
 .deposit-hero{display:grid; gap:20px; align-items:center; grid-template-columns:1fr;}
 .deposit-hero-panel{display:flex; justify-content:center; align-items:center;}
 .dashboard-hero{display:grid; gap:20px; align-items:center; grid-template-columns:1fr;}
@@ -66,12 +66,46 @@
 .paystack-account-grid{display:grid; gap:16px}
 .paystack-stat{font-size:26px; font-weight:700; color:#fff; word-break:break-all}
 .button-row{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; margin-top:18px}
+.button-row .btn{min-height:48px; padding:14px 18px; font-size:14px; font-weight:600; border-radius:12px}
 .btn.ghost{background:transparent; border:1px solid rgba(255,255,255,0.14); color:var(--text-main)}
 .btn.ghost:hover{background:rgba(255,255,255,0.06)}
-.modern-form{display:grid; gap:20px}
+.modern-form{display:grid; gap:18px}
 #active-plan{padding:22px}
 #active-plan h3{margin-top:0}
 .dashboard-shell{padding-bottom:96px}
+
+.referral-page{display:grid; gap:18px; padding-bottom:96px}
+.referral-hero{padding:18px 18px 16px; border-radius:20px; background:linear-gradient(135deg, rgba(251,191,36,0.12), rgba(15,23,42,0.94)); border:1px solid rgba(251,191,36,0.18)}
+.referral-hero-top{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap}
+.referral-hero h1{margin:8px 0 0; font-size:clamp(1.5rem, 4vw, 2.2rem); line-height:1.2; letter-spacing:-0.04em; font-weight:700}
+.kicker{font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase}
+.lead{margin:12px 0 0; color:var(--text-secondary); line-height:1.6; font-size:14px}
+.earn-badge{padding:10px 12px; border-radius:14px; background:rgba(15,23,42,0.6); border:1px solid rgba(251,191,36,0.2); min-width:142px}
+.earn-badge .muted{display:block; margin-bottom:6px; font-size:10px; letter-spacing:0.1em}
+.earn-badge strong{font-size:1.4rem; color:#fff; letter-spacing:-0.05em; font-weight:700}
+.referral-grid{display:grid; gap:18px}
+.referral-card{padding:16px 14px; border-radius:18px}
+.referral-card h2{margin:0; font-size:1.1rem; font-weight:700}
+.compact{margin-bottom:12px}
+.referral-code-box{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06)}
+.referral-code-box span{font-size:1rem; font-weight:700; color:#fff; letter-spacing:0.08em}
+.referral-link-box{margin-top:14px}
+.referral-link-box label{display:block; margin-bottom:8px; color:var(--text-secondary); font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase}
+.link-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.link-row input{flex:1; min-width:0; min-height:48px; padding:14px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); color:#fff; font-size:14px}
+.referral-actions{margin-top:14px; display:flex; justify-content:flex-start}
+.primary-card{background:linear-gradient(180deg, rgba(251,191,36,0.08), rgba(15,23,42,0.9)); border:1px solid rgba(251,191,36,0.14)}
+.stats-grid{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px}
+.stat-box{padding:12px 10px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:8px; min-height:96px; justify-content:center}
+.stat-box strong{font-size:1.2rem; color:#fff; letter-spacing:-0.04em; font-weight:700}
+.ref-history-list{display:grid; gap:10px; margin-top:8px}
+.history-row{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06)}
+.history-row:last-child{border-bottom:none}
+.history-row div{display:flex; flex-direction:column; gap:4px; min-width:0}
+.history-row strong{color:#fff; font-size:0.98rem; font-weight:700}
+.history-row span, .history-row small{color:var(--text-secondary); font-size:12px}
+.empty-state{padding:14px 0; color:var(--text-secondary); font-size:14px}
+.how-it-works-card ol{margin:12px 0 0 18px; color:var(--text-secondary); line-height:1.7; font-size:14px}
 
 /* Balance card typography refinements only — no redesign */
 .balance-card-compact{padding:16px 18px; border-radius:16px; background:linear-gradient(180deg, rgba(17,17,19,0.6), rgba(10,10,12,0.8)); border:1px solid rgba(251,191,36,0.12);}
@@ -124,6 +158,14 @@
 .transaction-amount.positive{color:#22c55e}
 .transaction-amount.negative{color:#fca5a5}
 .transaction-right .muted{font-size:12px}
+
+@media (max-width:480px){
+  .stats-grid{grid-template-columns:1fr}
+  .referral-code-box{align-items:flex-start}
+  .link-row{flex-direction:column; align-items:stretch}
+  .link-row button{width:100%}
+  .earn-badge{width:100%}
+}
 
 @media (min-width:431px) and (max-width:699px){
   .container{padding:16px}

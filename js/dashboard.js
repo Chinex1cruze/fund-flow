@@ -191,62 +191,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function loadDashboardData(){
-    const [transactionsRes, announcementsRes, notificationsRes, referralsRes] = await Promise.all([
-      api.getTransactions(),
-      api.getAnnouncements(),
-      api.getNotifications(),
-      api.getReferrals()
-    ]);
+   const [transactionsRes, announcementsRes, notificationsRes] = await Promise.all([
+     api.getTransactions(),
+     api.getAnnouncements(),
+     api.getNotifications()
+   ]);
 
-    renderWalletCards(currentUser);
-    renderAnnouncements(announcementsRes.announcements || []);
-    renderVipCountdown(currentUser);
-    renderActivePlan(currentUser);
-    renderTransactions(transactionsRes.transactions || []);
-    notificationCountEl.textContent = (notificationsRes.notifications || []).length;
-    // render referrals panel
-    const referralsData = referralsRes || {};
-    const referralContentEl = document.getElementById('referral-content');
-    if(referralContentEl){
-      const code = referralsData.referralCode || '—';
-      const link = referralsData.referralLink || (window.location.origin + `/register.html?ref=${encodeURIComponent(code)}`);
-      const totalReferrals = referralsData.totalReferrals || 0;
-      const totalReferralEarnings = referralsData.totalReferralEarnings || 0;
-      const recentHistory = referralsData.history || [];
-      referralContentEl.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-            <div style="flex:1;min-width:0;max-width:100%;"><div class="muted">Referral code</div><div style="font-weight:700">${code}</div></div>
-            <div style="flex:2;min-width:0;max-width:100%;"><div class="muted">Referral link</div><div style="word-break:break-all">${link}</div></div>
-            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
-              <button class="btn" id="copy-ref-link">Copy</button>
-              <button class="btn ghost" id="share-ref-link">Share</button>
-            </div>
-          </div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <div class="note-panel" style="padding:10px;min-width:0;max-width:100%;"><div class="muted">Total referrals</div><div style="font-weight:700">${totalReferrals}</div></div>
-            <div class="note-panel" style="padding:10px;min-width:0;max-width:100%;"><div class="muted">Referral earnings</div><div style="font-weight:700">₦${formatN(totalReferralEarnings)}</div></div>
-          </div>
-          <div>
-            <h4>Recent referral rewards</h4>
-            <div id="ref-history" style="max-height:220px;overflow:auto;">
-              ${recentHistory.length ? recentHistory.map(h => `<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);"><div><strong>₦${formatN(h.amount)}</strong> <span class="muted">${new Date(h.createdAt||Date.now()).toLocaleString()}</span></div><div class="muted">Ref. deposit: ${h.meta && h.meta.depositId ? h.meta.depositId : '—'}</div></div>`).join('') : '<div class="muted">No referral rewards yet.</div>'}
-            </div>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('copy-ref-link')?.addEventListener('click', () => {
-        navigator.clipboard.writeText(link).then(()=> showToast('Referral link copied', 'success')).catch(()=> showToast('Unable to copy', 'error'));
-      });
-      document.getElementById('share-ref-link')?.addEventListener('click', () => {
-        if(navigator.share){
-          navigator.share({ title: 'Join FundFlow', text: 'Join FundFlow and earn rewards', url: link }).catch(()=>{});
-        }else{
-          navigator.clipboard.writeText(link).then(()=> showToast('Referral link copied', 'success')).catch(()=> showToast('Unable to copy', 'error'));
-        }
-      });
-    }
+   renderWalletCards(currentUser);
+   renderAnnouncements(announcementsRes.announcements || []);
+   renderVipCountdown(currentUser);
+   renderActivePlan(currentUser);
+   renderTransactions(transactionsRes.transactions || []);
+   notificationCountEl.textContent = (notificationsRes.notifications || []).length;
    // render notifications list for modal
    const notificationsListEl = document.getElementById('notifications-list');
    if(notificationsListEl){

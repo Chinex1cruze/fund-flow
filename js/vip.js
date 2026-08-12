@@ -45,16 +45,33 @@ async function renderVIPList(){
 
   plans.forEach(plan=>{
     const hasActive = u && u.activePlan && u.activePlan.id === plan.id;
-    const card = document.createElement('div'); card.className='vip-card card';
-    // On the dedicated vip.html page users should be able to purchase (Buy Now).
-    // Other pages (e.g., home preview) may show a preview button.
-    const btnLabel = isVIPPage ? 'Buy Now' : 'Preview';
-    const btnClass = isVIPPage ? 'btn primary buy-vip' : 'btn ghost vip-preview';
+    const card = document.createElement('article'); card.className='vip-card card';
+    const btnLabel = isVIPPage ? (hasActive ? 'Active plan' : 'Buy Now') : 'Preview';
+    const btnClass = isVIPPage ? (hasActive ? 'btn ghost' : 'btn primary buy-vip') : 'btn ghost vip-preview';
+    const btnDisabled = hasActive && isVIPPage ? 'disabled' : '';
+    const remediation = hasActive ? '<span class="vip-tag active">Active</span>' : '<span class="vip-tag">Standby</span>';
     card.innerHTML = `
-      <div class="row"><strong>${plan.name}</strong><div class="muted" style="margin-left:auto">Deposit ₦${formatN(plan.deposit)}</div></div>
-      <div class="meta">Daily Reward: ₦${formatN(plan.daily)}</div>
-      <div class="row mt-2"><button class="${btnClass}" data-id="${plan.id}">${btnLabel}</button>
-      <div class="muted" style="margin-left:auto" data-countdown-id="${plan.id}">24:00:00</div></div>
+      <div class="vip-card-top">
+        <div>
+          <div class="vip-plan-name">${plan.name}</div>
+          <div class="vip-plan-subtitle">Investment tier</div>
+        </div>
+        ${remediation}
+      </div>
+      <div class="vip-plan-amount">₦${formatN(plan.deposit)}</div>
+      <div class="vip-plan-row">
+        <span class="muted">Deposit</span>
+        <strong>₦${formatN(plan.deposit)}</strong>
+      </div>
+      <div class="vip-plan-row">
+        <span class="muted">Daily reward</span>
+        <strong>₦${formatN(plan.daily)}</strong>
+      </div>
+      <div class="vip-plan-row timing-row">
+        <span class="muted">Next payout</span>
+        <span class="countdown-pill" data-countdown-id="${plan.id}">24:00:00</span>
+      </div>
+      <button class="${btnClass}" data-id="${plan.id}" ${btnDisabled}>${btnLabel}</button>
     `;
     list.appendChild(card);
 

@@ -10,30 +10,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const withdrawStatus = document.getElementById('withdraw-status');
   const form = document.getElementById('withdraw-form');
   const submitBtn = form?.querySelector('button[type="submit"]');
-  const verifyBtn = document.getElementById('verify-account');
 
   // No longer require an active VIP plan to request withdrawal. Display helpful guidance instead.
   if(withdrawStatus){
     withdrawStatus.style.display = 'block';
   }
-
-  // Optional account verification flow (testing or provider configured). Not required to submit.
-  verifyBtn?.addEventListener('click', async ()=>{
-    const bank = document.getElementById('bank-name').value.trim();
-    const acctNo = document.getElementById('account-number').value.trim();
-    const acctNameEl = document.getElementById('account-name');
-    if(!bank){ showToast('Please select a bank', 'warning'); return; }
-    if(!/^\d{10}$/.test(acctNo)){ showToast('Account number must be exactly 10 digits', 'warning'); return; }
-    try{
-      const res = await api.verifyAccount({ bankName: bank, accountNumber: acctNo });
-      if(res && res.success){
-        if(acctNameEl) acctNameEl.value = res.accountName || '';
-        showToast('Account name retrieved (testing mode). Please confirm the name matches the account.', 'success');
-      }else{
-        showToast(res.message || 'Unable to verify account details. Verification is optional; you may enter the account name manually.', 'info');
-      }
-    }catch(err){ console.error(err); showToast(err.message || 'Verification failed', 'error'); }
-  });
 
   if(!form) return;
   form.addEventListener('submit', async e=>{
@@ -55,9 +36,18 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     // Retrieve withdrawal fee from server to show user breakdown before confirmation
     try{
       const settingsRes = await api.getPaymentSettings?.() || {};
-      const fee = Number((settingsRes.settings && settingsRes.settings.withdrawalFee) || 0);
-      const net = Math.max(0, amt - fee);
-      const confirmMsg = `Amount: ₦${formatN(amt)}\nBank: ${bank}\nAccount Number: ${acctNo}\nAccount Name: ${acctName}\nWithdrawal Fee: ₦${formatN(fee)}\nNet Amount: ₦${formatN(net)}`;
+      const configuredFee = Number((settingsRes.settings && settingsRes.settings.withdrawalFee) ?? 0.2);
+      const feeRate = configuredFee > 1 ? configuredFee / 100 : configuredFee;
+      const fee = Number((amt * (Number.isFinite(feeRate) ? feeRate : 0.2)).toFixed(2));
+      const net = Number((amt - fee).toFixed(2));
+      const confirmMsg = [
+        `Withdrawal Amount: ₦${formatN(amt)}`,
+        `Withdrawal Fee (20%): ₦${formatN(fee)}`,
+        `Amount You Will Receive: ₦${formatN(net)}`,
+        `Bank: ${bank}`,
+        `Account Number: ${acctNo}`,
+        `Account Name: ${acctName}`
+      ].join('\n');
 
       // Show styled modal confirmation instead of native confirm()
       const modal = document.getElementById('withdraw-confirm-modal');
@@ -66,7 +56,16 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       const cancelBtn = document.getElementById('withdraw-cancel-btn');
       const closeBtn = document.getElementById('withdraw-confirm-close');
       if(modal && modalBody && confirmBtn && cancelBtn && closeBtn){
-        modalBody.textContent = `Please confirm the withdrawal details:\n\n${confirmMsg}`;
+        modalBody.innerHTML = `
+          <div style="display:grid; gap:10px; color:var(--text-main);">
+            <div><strong>Withdrawal Amount:</strong> ₦${formatN(amt)}</div>
+            <div><strong>Withdrawal Fee (20%):</strong> ₦${formatN(fee)}</div>
+            <div><strong>Amount You Will Receive:</strong> ₦${formatN(net)}</div>
+            <div><strong>Bank:</strong> ${bank}</div>
+            <div><strong>Account Number:</strong> ${acctNo}</div>
+            <div><strong>Account Name:</strong> ${acctName}</div>
+          </div>
+        `;
         modal.classList.remove('hidden');
         // return a promise that resolves when user confirms/cancels
         const choice = await new Promise((resolve) => {

@@ -9,25 +9,73 @@
 </head>
 <body>
   <div data-include="components/navbar.html"></div>
-  <main class="page container">
-    <section class="card">
-      <h2>Referral</h2>
-      <label>Referral Link<input type="text" id="ref-link" readonly></label>
-      <div class="row">
-        <button class="btn outline" id="copy-ref">Copy Referral Link</button>
-        <div class="muted" id="ref-count">Referrals: 0</div>
+
+  <main class="page container referral-page">
+    <section class="referral-hero card">
+      <div class="referral-hero-top">
+        <div>
+          <div class="kicker">Referral Program</div>
+          <h1>Invite friends and earn rewards</h1>
+        </div>
+        <div class="earn-badge">
+          <span class="muted">Referral earnings</span>
+          <strong id="ref-earn">₦0</strong>
+        </div>
       </div>
-      <div class="muted" id="ref-earn">Referral Earnings: ₦0</div>
-      <p class="muted">Referral bonus: Earn 5% of every successful referral's deposit.</p>
+      <p class="lead">Share your unique FundFlow referral link and earn a 5% reward when a friend makes their first approved deposit.</p>
+    </section>
+
+    <section class="referral-grid">
+      <article class="card referral-card primary-card">
+        <h2 class="compact">Your referral code</h2>
+        <div class="referral-code-box">
+          <span id="ref-code">FF000000</span>
+          <button class="btn small" id="copy-ref" type="button">Copy</button>
+        </div>
+
+        <div class="referral-link-box">
+          <label>Referral link</label>
+          <div class="link-row">
+            <input id="ref-link" type="text" readonly value="" />
+            <button class="btn small" id="copy-link" type="button">Copy</button>
+          </div>
+        </div>
+
+        <div class="referral-actions">
+          <button class="btn primary" id="share-ref" type="button">Share</button>
+        </div>
+      </article>
+
+      <article class="card referral-card">
+        <h2>Overview</h2>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="muted">Referrals</span>
+            <strong id="ref-count">0</strong>
+          </div>
+          <div class="stat-box">
+            <span class="muted">Earnings</span>
+            <strong id="ref-earn-amount">₦0</strong>
+          </div>
+          <div class="stat-box">
+            <span class="muted">Rate</span>
+            <strong>5%</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="card referral-card">
+        <h2>Reward history</h2>
+        <div id="ref-history" class="ref-history-list"></div>
+      </article>
     </section>
   </main>
+
   <div data-include="components/footer.html"></div>
+
   <script src="js/app.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/toast.js"></script>
   <script src="js/referral.js"></script>
 </body>
 </html>
-
-
-
