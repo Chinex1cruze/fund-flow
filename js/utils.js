@@ -99,15 +99,16 @@ const api = {
   },
 
 
-  deposit: async ({ amount, transactionReference, screenshot }) => {
+  deposit: async ({ amount, paymentReference, bankTransferReference, screenshot }) => {
     if(USE_API){
-      return apiFetch(`${API_BASE}/deposits`, { method:'POST', body: { amount, transactionReference, screenshot } });
+      return apiFetch(`${API_BASE}/deposits`, { method:'POST', body: { amount, paymentReference, bankTransferReference, screenshot } });
     }
     const u = getUser() || {};
     u.balance = (u.balance||0) + Number(amount);
     saveUser(u);
     return { user: u };
   },
+
 
   verifyAccount: async ({ bankName, accountNumber }) => {
     if(USE_API) return apiFetch(`${API_BASE}/verify-account`, { method: 'POST', body: { bankName, accountNumber } });

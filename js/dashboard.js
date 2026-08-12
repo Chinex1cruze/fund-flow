@@ -43,14 +43,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     walletCardsEl.innerHTML = cards.map((card) => {
       const isBalance = card.type === 'balance';
+      if(isBalance){
+        return `
+          <article class="wallet-card">
+            <div>
+              <div class="muted">${card.label}</div>
+              <div class="balance-amount balance-value" data-balance-scale="balance">${card.value}</div>
+              <div style="margin-top:10px; display:flex; gap:8px;">
+                <button class="btn outline balance-toggle" id="toggle-balance-btn" type="button">Hide</button>
+                <a href="deposit.html" class="btn primary" style="display:inline-block;">Add Money</a>
+                <a href="transactions.html" class="btn ghost" style="display:inline-block;">Transactions</a>
+              </div>
+            </div>
+          </article>`;
+      }
       return `
         <article class="wallet-card">
           <div class="dashboard-wallet-inline">
             <div>
               <div class="muted">${card.label}</div>
-              <div class="balance-amount ${isBalance ? 'balance-value' : ''}" data-balance-scale="${isBalance ? 'balance' : 'other'}">${card.value}</div>
+              <div class="balance-amount ${card.type === 'referral' ? '' : ''}" data-balance-scale="other">${card.value}</div>
             </div>
-            ${isBalance ? '<button class="balance-toggle" type="button" id="toggle-balance-btn">Hide Balance</button>' : ''}
           </div>
         </article>`;
     }).join('');
@@ -238,6 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   notificationsButton?.addEventListener('click', () => { if(notificationsModal) notificationsModal.classList.remove('hidden'); });
   notificationsModalClose?.addEventListener('click', () => { if(notificationsModal) notificationsModal.classList.add('hidden'); });
 
+  // Mobile bottom nav notifications open
+  document.getElementById('open-notifications-mobile')?.addEventListener('click', (e) => { e.preventDefault(); if(notificationsModal) notificationsModal.classList.remove('hidden'); });
+
   const communityModal = document.getElementById('community-modal');
   const shouldShowCommunity = localStorage.getItem('ff_show_community') === '1' && !localStorage.getItem('ff_community_dismissed');
   if(communityModal && shouldShowCommunity){
@@ -255,4 +271,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   communityModal?.addEventListener('click', (event) => {
     if(event.target === communityModal) closeModal();
   });
+
+  // Keep bottom-nav active state in sync
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
+    try{ if(location.pathname.endsWith(a.getAttribute('href'))) a.classList.add('active'); }catch(e){}
+  });
+
 });

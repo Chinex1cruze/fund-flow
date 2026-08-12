@@ -36,6 +36,18 @@
 /* Bottom navigation safe area for phones with home indicator */
 .bottom-nav{left:12px; right:12px; transform:none; width:auto; border-radius:16px; padding:8px}
 
+/* Show mobile bottom navigation on small screens */
+@media (max-width:700px){
+ .bottom-nav{display:flex; position:fixed; bottom:12px; left:12px; right:12px; justify-content:space-between; z-index:9999; gap:8px; box-shadow:0 14px 36px rgba(0,0,0,0.45);}
+ .bottom-nav .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.02);color:var(--text-secondary);text-decoration:none}
+ .bottom-nav .nav-item.active{background:linear-gradient(90deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04)); color:#fff}
+ .bottom-nav .nav-item span{font-size:11px}
+}
+
+@media (min-width:701px){
+ .bottom-nav{display:none}
+}
+
 /* Modal adjustments on small screens */
 .modal-card{padding:16px}
 .modal-card h2{font-size:18px}
