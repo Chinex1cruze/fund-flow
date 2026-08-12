@@ -34,49 +34,65 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderWalletCards(data){
-    const cards = [
-      { label: 'Available Balance', value: formatMoney(data.balance || 0), type: 'balance' },
-      { label: "Today's Earnings", value: formatMoney(data.earnings || 0), type: 'earnings' },
-      { label: 'Referral Earnings', value: formatMoney(data.refEarnings || 0), type: 'referral' },
-      { label: 'Active VIP Plan', value: data.activePlan ? data.activePlan.name : 'No active plan', type: 'vip' }
-    ];
+    // Compact premium balance card + action row + small stats
+    const balance = formatMoney(data.balance || 0);
+    const earnings = formatMoney(data.earnings || 0);
+    const referral = formatMoney(data.refEarnings || 0);
 
-    walletCardsEl.innerHTML = cards.map((card) => {
-      const isBalance = card.type === 'balance';
-      if(isBalance){
-        return `
-          <article class="wallet-card">
+    walletCardsEl.innerHTML = `
+      <article class="wallet-card balance-card-compact">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
             <div>
-              <div class="muted">${card.label}</div>
-              <div class="balance-amount balance-value" data-balance-scale="balance">${card.value}</div>
-              <div style="margin-top:10px; display:flex; gap:8px;">
-                <button class="btn outline balance-toggle" id="toggle-balance-btn" type="button">Hide</button>
-                <a href="deposit.html" class="btn primary" style="display:inline-block;">Add Money</a>
-                <a href="transactions.html" class="btn ghost" style="display:inline-block;">Transactions</a>
-              </div>
+              <div class="muted">Available balance</div>
+              <div class="balance-amount balance-value" data-balance-scale="balance">${balance}</div>
             </div>
-          </article>`;
-      }
-      return `
-        <article class="wallet-card">
-          <div class="dashboard-wallet-inline">
-            <div>
-              <div class="muted">${card.label}</div>
-              <div class="balance-amount ${card.type === 'referral' ? '' : ''}" data-balance-scale="other">${card.value}</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+              <button class="icon-pill eye-button" id="toggle-balance-btn" type="button" aria-label="Toggle balance">👁️</button>
             </div>
           </div>
-        </article>`;
-    }).join('');
 
+          <div class="dashboard-action-row" style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="deposit.html" class="btn primary">+ Add Money</a>
+            <a href="withdraw.html" class="btn outline">Withdraw</a>
+            <a href="transactions.html" class="btn ghost">Transactions</a>
+          </div>
+
+          <div class="compact-stats" style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="note-panel" style="padding:10px;min-width:120px;flex:1;">
+              <div class="muted">Today's Earnings</div>
+              <div style="font-weight:700;font-size:16px">${earnings}</div>
+            </div>
+            <div class="note-panel" style="padding:10px;min-width:120px;flex:1;">
+              <div class="muted">Referral Earnings</div>
+              <div style="font-weight:700;font-size:16px">${referral}</div>
+            </div>
+          </div>
+        </div>
+      </article>`;
+
+    // Masking logic
     const balanceToggle = document.getElementById('toggle-balance-btn');
+    const balanceEls = document.querySelectorAll('[data-balance-scale="balance"]');
+    let isHidden = false;
+    // initialize masked state if CSS class present
+    balanceEls.forEach(el => { if(el.classList.contains('masked')) isHidden = true; });
+
     if(balanceToggle){
       balanceToggle.addEventListener('click', () => {
-        const shouldShow = balanceToggle.dataset.hidden === 'true';
-        balanceToggle.dataset.hidden = shouldShow ? 'false' : 'true';
-        balanceToggle.textContent = shouldShow ? 'Hide Balance' : 'Show Balance';
-          document.querySelectorAll('[data-balance-scale="balance"]').forEach((el) => {
-          el.classList.toggle('masked', !shouldShow);
-          el.textContent = shouldShow ? formatMoney(data.balance || 0) : '••••••';
+        isHidden = !isHidden;
+        balanceEls.forEach((el) => {
+          if(isHidden){
+            el.classList.add('masked');
+            el.dataset.hidden = 'true';
+            el.textContent = '₦••••••';
+            balanceToggle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7z" stroke="#fde68a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z" stroke="#fde68a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          } else {
+            el.classList.remove('masked');
+            el.dataset.hidden = 'false';
+            el.textContent = balance;
+            balanceToggle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.94 17.94L6.06 6.06" stroke="#111827" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.59 13.41a3 3 0 004.24-4.24" stroke="#111827" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          }
         });
       });
     }
