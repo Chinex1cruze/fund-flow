@@ -42,6 +42,8 @@
  .bottom-nav .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.02);color:var(--text-secondary);text-decoration:none}
  .bottom-nav .nav-item.active{background:linear-gradient(90deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04)); color:#fff}
  .bottom-nav .nav-item span{font-size:11px}
+ /* Ensure page content has bottom padding so bottom-nav does not cover content */
+ .page{padding-bottom:calc(env(safe-area-inset-bottom,12px) + 96px)}
 }
 
 @media (min-width:701px){
