@@ -43,14 +43,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     walletCardsEl.innerHTML = cards.map((card) => {
       const isBalance = card.type === 'balance';
+      if(isBalance){
+        return `
+          <article class="wallet-card">
+            <div>
+              <div class="muted">${card.label}</div>
+              <div class="balance-amount balance-value" data-balance-scale="balance">${card.value}</div>
+              <div style="margin-top:10px; display:flex; gap:8px;">
+                <button class="btn outline balance-toggle" id="toggle-balance-btn" type="button">Hide</button>
+                <a href="deposit.html" class="btn primary" style="display:inline-block;">Add Money</a>
+                <a href="transactions.html" class="btn ghost" style="display:inline-block;">Transactions</a>
+              </div>
+            </div>
+          </article>`;
+      }
       return `
         <article class="wallet-card">
           <div class="dashboard-wallet-inline">
             <div>
               <div class="muted">${card.label}</div>
-              <div class="balance-amount ${isBalance ? 'balance-value' : ''}" data-balance-scale="${isBalance ? 'balance' : 'other'}">${card.value}</div>
+              <div class="balance-amount ${card.type === 'referral' ? '' : ''}" data-balance-scale="other">${card.value}</div>
             </div>
-            ${isBalance ? '<button class="balance-toggle" type="button" id="toggle-balance-btn">Hide Balance</button>' : ''}
           </div>
         </article>`;
     }).join('');
@@ -159,10 +172,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function loadDashboardData(){
-    const [transactionsRes, announcementsRes, notificationsRes] = await Promise.all([
+    const [transactionsRes, announcementsRes, notificationsRes, referralsRes] = await Promise.all([
       api.getTransactions(),
       api.getAnnouncements(),
-      api.getNotifications()
+      api.getNotifications(),
+      api.getReferrals()
     ]);
 
     renderWalletCards(currentUser);
@@ -171,6 +185,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderActivePlan(currentUser);
     renderTransactions(transactionsRes.transactions || []);
     notificationCountEl.textContent = (notificationsRes.notifications || []).length;
+    // render referrals panel
+    const referralsData = referralsRes || {};
+    const referralContentEl = document.getElementById('referral-content');
+    if(referralContentEl){
+      const code = referralsData.referralCode || '—';
+      const link = referralsData.referralLink || (window.location.origin + `/register.html?ref=${encodeURIComponent(code)}`);
+      const totalReferrals = referralsData.totalReferrals || 0;
+      const totalReferralEarnings = referralsData.totalReferralEarnings || 0;
+      const recentHistory = referralsData.history || [];
+      referralContentEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            <div style="flex:1;min-width:160px;"><div class="muted">Referral code</div><div style="font-weight:700">${code}</div></div>
+            <div style="flex:2;min-width:240px;"><div class="muted">Referral link</div><div style="word-break:break-all">${link}</div></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn" id="copy-ref-link">Copy</button>
+              <button class="btn ghost" id="share-ref-link">Share</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <div class="note-panel" style="padding:10px;min-width:140px;"><div class="muted">Total referrals</div><div style="font-weight:700">${totalReferrals}</div></div>
+            <div class="note-panel" style="padding:10px;min-width:160px;"><div class="muted">Referral earnings</div><div style="font-weight:700">₦${formatN(totalReferralEarnings)}</div></div>
+          </div>
+          <div>
+            <h4>Recent referral rewards</h4>
+            <div id="ref-history" style="max-height:220px;overflow:auto;">
+              ${recentHistory.length ? recentHistory.map(h => `<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);"><div><strong>₦${formatN(h.amount)}</strong> <span class="muted">${new Date(h.createdAt||Date.now()).toLocaleString()}</span></div><div class="muted">Ref. deposit: ${h.meta && h.meta.depositId ? h.meta.depositId : '—'}</div></div>`).join('') : '<div class="muted">No referral rewards yet.</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('copy-ref-link')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(link).then(()=> showToast('Referral link copied', 'success')).catch(()=> showToast('Unable to copy', 'error'));
+      });
+      document.getElementById('share-ref-link')?.addEventListener('click', () => {
+        if(navigator.share){
+          navigator.share({ title: 'Join FundFlow', text: 'Join FundFlow and earn rewards', url: link }).catch(()=>{});
+        }else{
+          navigator.clipboard.writeText(link).then(()=> showToast('Referral link copied', 'success')).catch(()=> showToast('Unable to copy', 'error'));
+        }
+      });
+    }
    // render notifications list for modal
    const notificationsListEl = document.getElementById('notifications-list');
    if(notificationsListEl){
@@ -194,6 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   notificationsButton?.addEventListener('click', () => { if(notificationsModal) notificationsModal.classList.remove('hidden'); });
   notificationsModalClose?.addEventListener('click', () => { if(notificationsModal) notificationsModal.classList.add('hidden'); });
 
+  // Mobile bottom nav notifications open
+  document.getElementById('open-notifications-mobile')?.addEventListener('click', (e) => { e.preventDefault(); if(notificationsModal) notificationsModal.classList.remove('hidden'); });
+
   const communityModal = document.getElementById('community-modal');
   const shouldShowCommunity = localStorage.getItem('ff_show_community') === '1' && !localStorage.getItem('ff_community_dismissed');
   if(communityModal && shouldShowCommunity){
@@ -211,4 +271,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   communityModal?.addEventListener('click', (event) => {
     if(event.target === communityModal) closeModal();
   });
+
+  // Keep bottom-nav active state in sync
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
+    try{ if(location.pathname.endsWith(a.getAttribute('href'))) a.classList.add('active'); }catch(e){}
+  });
+
 });

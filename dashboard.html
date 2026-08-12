@@ -30,6 +30,18 @@
       <div id="wallet-cards" class="wallet-grid dashboard-wallet-grid"></div>
     </section>
 
+    <section id="referral-panel" class="card referral-card" style="margin-bottom:16px;">
+      <div class="section-heading">
+        <div>
+          <h3>Your Referral</h3>
+          <p class="muted">Share your referral link and earn commissions when your referrals deposit.</p>
+        </div>
+      </div>
+      <div id="referral-content">
+        <div class="muted">Loading referral data...</div>
+      </div>
+    </section>
+
     <section class="quick-actions card">
       <div class="section-heading">
         <div>
@@ -42,6 +54,7 @@
         <a href="withdraw.html" class="action">Withdraw</a>
         <a href="referral.html" class="action">Referral</a>
         <a href="transactions.html" class="action">Transactions</a>
+        <a href="profile.html" class="action">👤 Profile</a>
         <a href="https://t.me/+MOqlB_KWQ0UzYmNk" target="_blank" rel="noopener" class="action">Support</a>
       </div>
     </section>
@@ -82,7 +95,16 @@
       </div>
       <div id="transactions-list" class="transactions-list"></div>
     </section>
-  </main>
+    </main>
+
+    <div class="bottom-nav visible" role="navigation" aria-label="Bottom navigation">
+      <a href="dashboard.html" class="nav-item active">🏠<span>Home</span></a>
+      <a href="transactions.html" class="nav-item">🧾<span>Transactions</span></a>
+      <a href="vip.html" class="nav-item">✨<span>VIP</span></a>
+      <a href="#" id="open-notifications-mobile" class="nav-item">🔔<span>Notifications</span></a>
+      <a href="profile.html" class="nav-item">👤<span>Profile</span></a>
+    </div>
+
   <div data-include="components/footer.html"></div>
 
   <div id="notifications-modal" class="modal-backdrop hidden">

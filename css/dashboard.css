@@ -73,7 +73,6 @@
 .transactions-list{display:flex; flex-direction:column; gap:8px}
 @media (min-width:431px) and (max-width:699px){
   .container{padding:16px}
-  .vip-grid{grid-template-columns:repeat(2,1fr)}
 }
 .dashboard-header{display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; padding:18px 20px; border-radius:22px; background:linear-gradient(135deg, rgba(251,191,36,0.16), rgba(17,19,27,0.92)); border:1px solid rgba(251,191,36,0.22)}
 .dashboard-profile-row{display:flex; gap:14px; align-items:center}
