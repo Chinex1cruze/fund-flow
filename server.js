@@ -445,6 +445,8 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
       closeAt: now + 3 * 60 * 1000 // auto-close after 3 minutes
     };
     data.virtualAccounts.push(virtual);
+    // Audit the creation of a virtual deposit session for reconciliation
+    try{ addAuditLog(data, { adminToken: null, action: 'create_virtual_account', details: { vaId: virtual.id, userId: virtual.userId, backingAccountId: virtual.backingAccountId, paymentReference } }); }catch(e){}
     writeData(data);
     return res.json({ account: virtual, session: { paymentWindowSec: 10*60, autoCloseSec: 3*60 } });
   }

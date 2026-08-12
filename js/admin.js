@@ -126,6 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     depositAccountsList.innerHTML = list.map((account) => `
       <article class="note-panel card" style="margin:12px 0;">
         <div><strong>${account.bankName}</strong></div>
+        <div class="muted">Account ID: ${account.id}</div>
         <div class="muted">Account Number: ${account.accountNumber}</div>
         <div class="muted">Account Name: ${account.accountName}</div>
         <div class="muted">Status: ${account.status || 'active'}</div>
@@ -134,6 +135,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       </article>
     `).join('');
+  }
+
+  function renderVirtualAccounts(items) {
+    const list = items || [];
+    if(!list.length){
+      const el = document.getElementById('virtual-accounts-list'); if(el) el.innerHTML = '<div class="muted">No virtual sessions found.</div>';
+      return;
+    }
+    const out = list.slice().reverse().slice(0, 30).map((va) => `
+      <article class="note-panel card" style="margin:12px 0;">
+        <div><strong>${va.id}</strong></div>
+        <div class="muted">User: ${va.userId}</div>
+        <div class="muted">Payment Ref: ${va.paymentReference || '—'}</div>
+        <div class="muted">Backing Account: ${va.backingAccountId || '—'}</div>
+        <div class="muted">Bank: ${va.bankName} — ${va.accountNumber}</div>
+        <div class="muted">Amount: ₦${formatN(va.amount || 0)}</div>
+        <div class="muted">Created: ${new Date(va.createdAt || Date.now()).toLocaleString()}</div>
+      </article>
+    `).join('');
+    const el = document.getElementById('virtual-accounts-list'); if(el) el.innerHTML = out;
   }
 
   function renderAnnouncements(items) {
@@ -175,6 +196,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderWithdrawals((withdrawals.withdrawals || []).filter(w => w.status !== 'approved' && w.status !== 'rejected'));
       renderUsers(users.users || []);
       renderDepositAccounts(accounts.accounts || []);
+      // Load and render recent virtual sessions for reconciliation
+      try{
+        const virtualRes = await adminFetch('/api/admin/virtual-accounts');
+        renderVirtualAccounts(virtualRes.virtualAccounts || []);
+      }catch(e){ /* ignore */ }
       renderAnnouncements(announcements.announcements || []);
       renderTransactions(transactions.transactions || []);
     } catch (err) {
