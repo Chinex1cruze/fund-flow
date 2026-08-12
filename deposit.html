@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -30,90 +30,52 @@
     <section class="card deposit-card">
       <div class="section-heading">
         <div>
-          <h2>Assigned bank transfer deposit</h2>
-          <p class="muted">Transfer your funds to the account below and include the payment reference shown after initiating a deposit.</p>
-        </div>
-        <span class="status-pill">Active</span>
-      </div>
-
-      <div class="paystack-account-card card" id="deposit-placeholder-card">
-        <div class="deposit-account-placeholder">
-          <div class="muted">Loading your assigned funding account...</div>
+          <h2>Deposit Funds</h2>
+          <p class="muted">Enter an amount to generate a secure FundFlow payment reference and view bank transfer details.</p>
         </div>
       </div>
 
-      <!-- Step 1: Enter amount -->
-      <form id="deposit-form" class="modern-form">
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Deposit Amount (₦)</label>
-            <input type="number" id="deposit-amount" min="3000" placeholder="Enter amount to deposit" required>
-          </div>
-        </div>
-
-        <div class="deposit-meta card">
-          <div class="muted">Payment instructions</div>
-          <p>Minimum deposit is ₦3,000. After entering an amount you'll be shown the assigned account details and a unique payment reference to include in your bank transfer narration. This helps the administrator identify and verify your payment faster.</p>
-        </div>
-        <button class="btn primary" type="submit">Continue to payment</button>
-      </form>
-
-      <!-- Step 2: Payment details (hidden until amount validated) -->
-      <div id="payment-step" class="hidden">
-        <div class="paystack-account-card card" style="margin-top:16px;">
-          <div id="payment-account-loader" class="deposit-account-loader hidden">
-            <div class="skeleton-lines">
-              <span class="skeleton-line long"></span>
-              <span class="skeleton-line medium"></span>
-              <span class="skeleton-line short"></span>
-            </div>
-            <div class="deposit-load-message">Loading your virtual deposit account...</div>
-          </div>
-          <div id="payment-account-card"></div>
-          <!-- Bank transfer reference input: collect the narration/reference the user used in their bank transfer -->
-          <div id="bank-transfer-confirm" style="margin-top:12px;">
+      <!-- INITIAL: only amount input -->
+      <div id="deposit-initial">
+        <form id="deposit-form" class="modern-form">
+          <div class="form-grid">
             <div class="form-field">
-              <label>Bank Transfer Reference / Narration</label>
-              <input type="text" id="bank-transfer-reference" placeholder="Enter the reference used in your bank transfer (optional)" />
-              <div class="muted" style="margin-top:6px">Enter exactly what you used as the narration/description in your bank transfer.</div>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-              <button id="confirm-payment-btn" class="btn primary large-confirm" type="button">I Have Made the Payment</button>
-              <button class="btn ghost" type="button" id="payment-back">Back</button>
+              <label>Deposit Amount (₦)</label>
+              <input type="number" id="deposit-amount" min="3000" placeholder="Enter amount to deposit" required>
             </div>
           </div>
-        </div>
-
-        <div class="note-panel card" style="margin-top:16px;">
-          <div class="row" style="justify-content:space-between; gap:12px;">
-            <div>
-              <div class="muted">Amount due</div>
-              <div class="balance-value" id="payment-amount-label">₦0</div>
-            </div>
-            <div>
-              <div class="muted">Payment window</div>
-              <div class="balance-value" id="payment-countdown">10:00</div>
-            </div>
-            <div>
-              <div class="muted">Auto close</div>
-              <div class="balance-value" id="close-countdown">03:00</div>
-            </div>
+          <div class="deposit-meta card">
+            <div class="muted">Payment instructions</div>
+            <p>Minimum deposit is ₦3,000. After entering an amount you'll be shown the assigned account details and a unique payment reference to include in your bank transfer narration. This helps the administrator identify and verify your payment faster.</p>
           </div>
-        </div>
-
-        <form id="payment-form" class="modern-form" style="margin-top:12px;">
-          <div id="payment-session-banner" class="note-panel hidden" style="border-left:4px solid #e53e3e; background:#fff6f6; color:#7f1d1d; margin-bottom:8px; display:none;"></div>
-          <div class="form-field">
-            <label>Transaction reference / narration</label>
-            <input type="text" id="payment-transaction-reference" placeholder="Paste the transfer reference or narration" required>
-          </div>
-          <div id="spacebar-hint" class="muted" style="margin-top:8px">You can press <strong>SPACE</strong> to confirm payment when ready.</div>
-          <div style="display:flex;gap:8px;margin-top:8px;">
-          <button id="confirm-payment-btn" class="btn primary large-confirm" type="submit">Confirm Payment</button>
-            <button class="btn ghost" type="button" id="payment-back">Back</button>
-          </div>
+          <button class="btn primary" id="continue-to-payment" type="button">Continue</button>
         </form>
       </div>
+
+      <!-- PAYMENT DETAILS: hidden until amount is provided -->
+      <div id="payment-details" class="hidden">
+        <div class="paystack-account-card card" id="bank-account-card"></div>
+
+        <div class="note-panel card" style="margin-top:12px;">
+          <div class="form-field">
+            <label>Bank Transfer Reference / Narration</label>
+            <input type="text" id="bank-transfer-reference" placeholder="Enter the reference used in your bank transfer (optional)" />
+            <div class="muted" style="margin-top:6px">Enter exactly what you used as the narration/description in your bank transfer.</div>
+          </div>
+
+          <div class="form-field" style="margin-top:8px;">
+            <label>Payment Screenshot (optional)</label>
+            <input type="file" id="payment-screenshot" accept="image/*" />
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button id="submit-payment-btn" class="btn primary" type="button">I Have Made the Payment — Submit Deposit</button>
+            <button id="payment-back" class="btn ghost" type="button">Back</button>
+          </div>
+        </div>
+
+      </div>
+
     </section>
   </main>
   <div data-include="components/footer.html"></div>
@@ -123,6 +85,3 @@
   <script src="js/deposit.js"></script>
 </body>
 </html>
-
-
-
