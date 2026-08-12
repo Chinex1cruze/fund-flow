@@ -445,6 +445,29 @@ app.get('/api/users/me', authMiddleware, (req, res) => {
   res.json({ user: sanitizeUser(user) });
 });
 
+// Allow users to update limited profile fields (fullName, profilePicture)
+app.patch('/api/users/me', authMiddleware, (req, res) => {
+  const data = readData();
+  const user = findUserById(data, req.user.id);
+  if(!user) return res.status(404).json({ message: 'User not found' });
+  const { fullName, profilePicture } = req.body || {};
+  let changed = false;
+  if(fullName && String(fullName).trim() && String(fullName).trim() !== (user.fullName || '')){
+    user.fullName = String(fullName).trim();
+    changed = true;
+  }
+  if(profilePicture && typeof profilePicture === 'string' && profilePicture.length > 10){
+    // Accept data URL or remote url — store as provided
+    user.profilePicture = profilePicture;
+    changed = true;
+  }
+  if(changed){
+    writeData(data);
+    createNotification(data, { userId: user.id, title: 'Profile updated', text: 'Your profile was successfully updated.', type: 'info' });
+  }
+  res.json({ user: sanitizeUser(user) });
+});
+
 // Referral info for current user: code, link, stats and history
 app.get('/api/referrals', authMiddleware, (req, res) => {
   const data = readData();
