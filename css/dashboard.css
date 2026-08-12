@@ -70,22 +70,6 @@
 .filter-btn{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--text-secondary); padding:8px 10px; border-radius:12px; font-size:13px}
 .filter-btn.active{background:var(--primary); color:#111}
 .transactions-list{display:flex; flex-direction:column; gap:8px}
-@media (max-width:430px){
-  .container{padding:12px}
-  .card{padding:12px}
-  .btn{padding:12px 14px}
-  .btn.large-confirm{min-width:200px; padding:12px 18px}
-  .brand-row .brand-image{width:44px; height:44px}
-  .dashboard-avatar-wrap{width:52px; height:52px}
-  .dashboard-user-name{font-size:20px}
-  .wallet-card{padding:14px}
-  .actions-grid{grid-template-columns:1fr; gap:8px}
-  .bottom-nav{left:12px; right:12px; transform:none; width:auto; border-radius:16px; padding:8px}
-  .form-field input, .form-field select{padding:12px}
-  .filter-row{padding:6px 0}
-  .filter-btn{padding:8px 12px; border-radius:999px; white-space:nowrap; font-size:14px}
-  .transactions-list{padding-bottom:120px}
-}
 @media (min-width:431px) and (max-width:699px){
   .container{padding:16px}
   .vip-grid{grid-template-columns:repeat(2,1fr)}
