@@ -97,6 +97,12 @@ button.btn:disabled{opacity:0.65; cursor:not-allowed; box-shadow:none;}
 
 /* Mobile-first responsive adjustments remain in responsive.css and vip.css */
 
+/* Ensure flex children can shrink and avoid causing horizontal overflow */
+.row, .dashboard-profile-row, .wallet-grid, .actions-grid, .dashboard-wallet-inline, .transaction-left, .transaction-right, .note-panel, .form-field { min-width:0 }
+.transaction-meta{min-width:0}
+.action{min-width:0}
+
+
 .site-footer{background:transparent; padding:18px 20px;}
 .footer-inner{display:flex; justify-content:space-between; gap:12px; align-items:center; color:var(--text-secondary); border-top:1px solid rgba(251,191,36,0.12); padding-top:14px}
 .footer-inner strong{color:#fff}

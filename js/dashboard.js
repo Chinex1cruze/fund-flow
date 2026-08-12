@@ -216,16 +216,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       referralContentEl.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-            <div style="flex:1;min-width:120px;max-width:100%;"><div class="muted">Referral code</div><div style="font-weight:700">${code}</div></div>
-            <div style="flex:2;min-width:120px;max-width:100%;"><div class="muted">Referral link</div><div style="word-break:break-all">${link}</div></div>
+            <div style="flex:1;min-width:0;max-width:100%;"><div class="muted">Referral code</div><div style="font-weight:700">${code}</div></div>
+            <div style="flex:2;min-width:0;max-width:100%;"><div class="muted">Referral link</div><div style="word-break:break-all">${link}</div></div>
             <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
               <button class="btn" id="copy-ref-link">Copy</button>
               <button class="btn ghost" id="share-ref-link">Share</button>
             </div>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <div class="note-panel" style="padding:10px;min-width:120px;max-width:100%;"><div class="muted">Total referrals</div><div style="font-weight:700">${totalReferrals}</div></div>
-            <div class="note-panel" style="padding:10px;min-width:120px;max-width:100%;"><div class="muted">Referral earnings</div><div style="font-weight:700">₦${formatN(totalReferralEarnings)}</div></div>
+            <div class="note-panel" style="padding:10px;min-width:0;max-width:100%;"><div class="muted">Total referrals</div><div style="font-weight:700">${totalReferrals}</div></div>
+            <div class="note-panel" style="padding:10px;min-width:0;max-width:100%;"><div class="muted">Referral earnings</div><div style="font-weight:700">₦${formatN(totalReferralEarnings)}</div></div>
           </div>
           <div>
             <h4>Recent referral rewards</h4>
