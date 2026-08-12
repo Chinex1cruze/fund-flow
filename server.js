@@ -599,6 +599,33 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
   // notify user that deposit was submitted and include reference in message
   createNotification(data, { userId: user.id, title: 'Deposit submitted', text: `Your deposit request of ₦${depositAmount} was submitted and is pending admin verification. Reference: ${deposit.transactionReference}`, type: 'info' });
   writeData(data);
+
+  // Ensure backingAccountId persisted for this deposit by re-resolving virtual session (edge-case when virtual created in separate request)
+  try{
+    const refreshed = readData();
+    const stored = (refreshed.deposits || []).find(d => d.id === deposit.id);
+    if(stored && (!stored.backingAccountId || String(stored.backingAccountId).trim() === '')){
+      // try resolve from virtualAccounts
+      const va = (refreshed.virtualAccounts || []).find(v => String(v.paymentReference) === String(stored.paymentReference));
+      if(va && va.backingAccountId) stored.backingAccountId = va.backingAccountId;
+      else if(!stored.backingAccountId && stored.userId){
+        const usr = (refreshed.users || []).find(u => u.id === stored.userId);
+        if(usr && usr.assignedDepositAccountId) stored.backingAccountId = usr.assignedDepositAccountId;
+      }
+      // update corresponding transaction meta
+      if(stored.backingAccountId && refreshed.transactions){
+        refreshed.transactions.forEach(t => {
+          if(t.meta && t.meta.depositId === stored.id){
+            t.meta = t.meta || {};
+            t.meta.backingAccountId = stored.backingAccountId;
+          }
+        });
+      }
+      writeData(refreshed);
+      return res.json({ deposit: stored });
+    }
+  }catch(e){ /* ignore */ }
+
   res.json({ deposit });
 });
 
