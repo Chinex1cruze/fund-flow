@@ -73,17 +73,30 @@
 #active-plan h3{margin-top:0}
 .dashboard-shell{padding-bottom:96px}
 
-/* Compact balance card tweaks */
+/* Compact balance card tweaks — optimized for phone sizing */
 .balance-card-compact{padding:18px; border-radius:18px; background:linear-gradient(180deg, rgba(17,17,19,0.6), rgba(10,10,12,0.8)); border:1px solid rgba(251,191,36,0.12);}
-.balance-card-compact .balance-value{font-size:28px; font-weight:800; letter-spacing:0.02em}
-.balance-card-compact .muted{font-size:12px; color:#fde68a}
-.eye-button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:10px;color:#fff;display:inline-grid;place-items:center}
-.dashboard-action-row .btn{padding:10px 14px;border-radius:12px;font-weight:600}
-.compact-stats .note-panel{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px;border-radius:12px}
-.action .action-icon svg{display:block}
-.nav-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;color:var(--text-secondary);text-decoration:none}
-.nav-item.active{background:linear-gradient(180deg, rgba(251,191,36,0.04), rgba(255,255,255,0.01));border-radius:12px}
+.balance-card-compact .balance-value{font-size:32px; font-weight:800; letter-spacing:0.02em; line-height:1.2}
+.balance-card-compact .muted{font-size:12px; font-weight:600; color:#fde68a; text-transform:uppercase; letter-spacing:0.08em}
+.eye-button{background:transparent;border:1px solid rgba(255,255,255,0.08);padding:10px;border-radius:12px;color:#fff;display:inline-grid;place-items:center;min-width:44px;min-height:44px;cursor:pointer;transition:all .18s ease}
+.eye-button:hover{border-color:rgba(251,191,36,0.28);background:rgba(251,191,36,0.08)}
+.eye-button svg{width:20px; height:20px}
+
+/* Dashboard action row — optimal phone interaction */
+.dashboard-action-row{display:flex;gap:10px;flex-wrap:wrap; margin:14px 0}
+.dashboard-action-row .btn{flex:1; min-width:120px; padding:14px 16px; border-radius:12px; font-weight:600; font-size:14px; min-height:48px}
+.dashboard-action-row .btn.primary{flex:1.2}
+
+/* Compact stats — properly sized for phone visibility */
+.compact-stats{display:flex;gap:12px;flex-wrap:wrap; margin-top:12px}
+.compact-stats .note-panel{background:rgba(251,191,36,0.04);border:1px solid rgba(251,191,36,0.08);padding:12px;border-radius:12px;flex:1;min-width:140px}
+.compact-stats .note-panel .muted{font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em}
+.compact-stats .note-panel > div:last-child{font-size:18px; font-weight:700; margin-top:6px}
+
+.action .action-icon svg{display:block; width:20px; height:20px}
+.nav-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 10px;color:var(--text-secondary);text-decoration:none;min-height:56px;justify-content:center;font-weight:500}
+.nav-item span{font-size:11px; line-height:1.2}
+.nav-item.active{background:linear-gradient(180deg, rgba(251,191,36,0.08), rgba(251,191,36,0.02));border-radius:12px; color:#fff}
 
 /* Ensure bottom nav doesn't overlay content */
 @supports(padding:env(safe-area-inset-bottom)){
@@ -92,11 +105,26 @@
 
 
 /* Mobile form and filter tweaks */
-.form-field input, .form-field select{width:100%; box-sizing:border-box}
-.filter-row{display:flex; gap:8px; overflow:auto; padding:6px 0}
-.filter-btn{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--text-secondary); padding:8px 10px; border-radius:12px; font-size:13px}
-.filter-btn.active{background:var(--primary); color:#111}
-.transactions-list{display:flex; flex-direction:column; gap:8px}
+.form-field input, .form-field select, .form-field textarea{width:100%; box-sizing:border-box}
+.filter-row{display:flex; gap:10px; overflow:auto; padding:10px 0; scroll-behavior:smooth}
+.filter-btn{background:transparent; border:1px solid rgba(255,255,255,0.08); color:var(--text-secondary); padding:10px 14px; border-radius:12px; font-size:13px; font-weight:500; white-space:nowrap; min-height:40px; transition:all .18s ease}
+.filter-btn:hover{border-color:rgba(251,191,36,0.28); background:rgba(251,191,36,0.08)}
+.filter-btn.active{background:var(--primary); color:#000; font-weight:600}
+.transactions-list{display:flex; flex-direction:column; gap:10px; padding-bottom:20px}
+.transaction-row{padding:14px; border-radius:14px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:64px; transition:all .18s ease}
+.transaction-row:hover{border-color:rgba(251,191,36,0.18); background:rgba(251,191,36,0.04)}
+.transaction-left{display:flex; gap:12px; align-items:center; flex:1; min-width:0}
+.transaction-icon{width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.24); flex-shrink:0}
+.transaction-icon svg{width:20px; height:20px}
+.transaction-meta{flex:1; min-width:0}
+.transaction-meta strong{display:block; font-size:14px; font-weight:600; margin-bottom:4px; text-transform:capitalize}
+.transaction-meta .muted{font-size:12px; color:var(--text-secondary)}
+.transaction-right{display:flex; flex-direction:column; align-items:flex-end; gap:4px; text-align:right; flex-shrink:0}
+.transaction-amount{font-size:16px; font-weight:700}
+.transaction-amount.positive{color:#22c55e}
+.transaction-amount.negative{color:#fca5a5}
+.transaction-right .muted{font-size:12px}
+
 @media (min-width:431px) and (max-width:699px){
   .container{padding:16px}
 }
