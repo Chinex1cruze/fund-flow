@@ -3,6 +3,31 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const heroBalance = document.getElementById('hero-balance');
   if(heroBalance) heroBalance.textContent = formatN((u && u.balance) || 0);
 
+  // Load and render the user's persistent assigned deposit account (fallback to default)
+  const depositPlaceholderCard = document.getElementById('deposit-placeholder-card');
+  async function loadAssignedAccount(){
+    if(!depositPlaceholderCard) return;
+    try{
+      const resp = await api.getDepositAccount();
+      const account = resp.account || {};
+      // Render assigned account into the top card so it's never empty
+      depositPlaceholderCard.innerHTML = `\n        <div class="deposit-account-grid">\n          <div>\n            <div class="account-stat-label">Bank Name</div>\n            <div class="account-stat-value">${account.bankName || '—'}</div>\n          </div>\n          <div>\n            <div class="account-stat-label">Account Number</div>\n            <div class="account-stat-value" id="assigned-account-number">${account.accountNumber || '—'}</div>\n          </div>\n          <div>\n            <div class="account-stat-label">Account Name</div>\n            <div class="account-stat-value">${account.accountName || '—'}</div>\n          </div>\n        </div>\n        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">\n          <button type="button" id="copy-assigned-account" class="btn primary">Copy Account Number</button>\n          <span class="muted">Status: ${account.status || 'Active'}</span>\n        </div>\n      `;
+
+      // Wire copy button
+      const copyBtn = document.getElementById('copy-assigned-account');
+      copyBtn?.addEventListener('click', async () => {
+        try{ await navigator.clipboard.writeText(account.accountNumber || ''); showToast('Account number copied', 'success'); }
+        catch(err){ showToast('Unable to copy account number', 'warning'); }
+      });
+    }catch(err){
+      // show a helpful message instead of leaving blank
+      depositPlaceholderCard.innerHTML = '<div class="deposit-account-placeholder"><div class="muted">Unable to load assigned deposit account right now. Please enter an amount or try again later.</div></div>';
+    }
+  }
+
+  // Kick off load on page load
+  loadAssignedAccount();
+
   // Elements
 
   // New multi-step flow
@@ -17,7 +42,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
   if(!step1Form) return;
 
-  const depositPlaceholderCard = document.getElementById('deposit-placeholder-card');
   const paymentAmountLabel = document.getElementById('payment-amount-label');
   const paymentCountdownLabel = document.getElementById('payment-countdown');
   const closeCountdownLabel = document.getElementById('close-countdown');
