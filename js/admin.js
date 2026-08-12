@@ -50,7 +50,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div><strong>${item.id}</strong></div>
         <div class="muted">User ID: ${item.userId}</div>
         <div class="muted">Amount: ₦${formatN(item.amount)}</div>
-        <div class="muted">Reference: ${item.transactionReference || '—'}</div>
+        <div class="muted">FundFlow Ref: ${item.transactionReference || '—'}</div>
+        <div class="muted">Payment Ref: ${item.paymentReference || '—'}</div>
+        <div class="muted">Bank Transfer Ref: ${item.bankTransferReference || '—'}</div>
         <div class="muted">Status: ${item.status || 'pending'}</div>
         <div class="button-row">
           <button class="btn primary" data-action="approve-deposit" data-id="${item.id}">Approve</button>

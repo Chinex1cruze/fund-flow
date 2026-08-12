@@ -552,26 +552,25 @@ app.post('/api/paystack/verify', authMiddleware, async (req, res) => {
 });
 
 app.post('/api/deposits', authMiddleware, (req, res) => {
-  const { amount, transactionReference, screenshot } = req.body || {};
+  // Accept payload: amount, paymentReference (FundFlow virtual session ref), bankTransferReference (user-supplied narration), screenshot
+  const { amount, paymentReference, bankTransferReference, screenshot } = req.body || {};
   const depositAmount = Number(amount);
   if(!depositAmount || depositAmount <= 0) return res.status(400).json({ message: 'Invalid deposit amount' });
 
   const data = readData();
   data.deposits = data.deposits || [];
 
-  // If no transactionReference was provided by the client, generate one server-side and ensure uniqueness
-  let txRef = String(transactionReference || '');
-  if(!txRef){
-    function genRef(){ return `FF-${Math.floor(Math.random()*900000+100000)}`; }
-    txRef = genRef();
-    const existing = new Set((data.deposits||[]).map(d => String(d.transactionReference||'').toLowerCase()).filter(Boolean));
-    while(existing.has(txRef.toLowerCase())) txRef = genRef();
-  } else {
-    // if client provided a txRef, ensure it does not collide
-    if((data.deposits||[]).some(d => d.transactionReference && d.transactionReference.toLowerCase() === String(txRef).toLowerCase())){
-      return res.status(409).json({ message: 'Duplicate transaction reference' });
-    }
+  // Prevent duplicate submission for the same user/paymentReference (idempotency)
+  if(paymentReference){
+    const existingSame = (data.deposits || []).find(d => d.userId === req.user.id && d.paymentReference === paymentReference && (d.status === 'pending' || d.status === 'approved'));
+    if(existingSame) return res.status(409).json({ message: 'A deposit for this payment session has already been submitted' });
   }
+
+  // Generate a unique internal transaction reference (FF-xxxxxx)
+  function genRef(){ return `FF-${Math.floor(Math.random()*900000+100000)}`; }
+  let txRef = genRef();
+  const existingRefs = new Set((data.deposits||[]).map(d => String(d.transactionReference||'').toLowerCase()).filter(Boolean));
+  while(existingRefs.has(txRef.toLowerCase())) txRef = genRef();
 
   const user = findUserById(data, req.user.id);
   if(!user) return res.status(404).json({ message: 'User not found' });
@@ -580,7 +579,9 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
     id: 'dep-' + Date.now(),
     userId: user.id,
     amount: depositAmount,
-    transactionReference: txRef,
+    transactionReference: txRef,              // internal FundFlow reference
+    paymentReference: paymentReference || null, // virtual account session reference (if any)
+    bankTransferReference: bankTransferReference || null, // user-supplied bank narration/reference
     screenshot: screenshot || null,
     status: 'pending',
     statusHistory: [{ status: 'pending', at: Date.now() }],
@@ -590,9 +591,9 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
 
   data.deposits.push(deposit);
   // create a pending transaction record
-  recordTransaction(data, { userId: user.id, type: 'deposit', amount: depositAmount, status: 'pending', meta: { depositId: deposit.id, transactionReference: deposit.transactionReference } });
+  recordTransaction(data, { userId: user.id, type: 'deposit', amount: depositAmount, status: 'pending', meta: { depositId: deposit.id, transactionReference: deposit.transactionReference, paymentReference: deposit.paymentReference, bankTransferReference: deposit.bankTransferReference } });
   // notify user that deposit was submitted and include reference in message
-  createNotification(data, { userId: user.id, title: 'Deposit submitted', text: `Your deposit request of ₦${depositAmount} was submitted. Use reference ${deposit.transactionReference} in your bank transfer narration.`, type: 'info' });
+  createNotification(data, { userId: user.id, title: 'Deposit submitted', text: `Your deposit request of ₦${depositAmount} was submitted and is pending admin verification. Reference: ${deposit.transactionReference}`, type: 'info' });
   writeData(data);
   res.json({ deposit });
 });
@@ -655,6 +656,8 @@ app.post('/api/withdrawals', authMiddleware, (req, res) => {
   data.withdrawals.push(withdrawal);
   // create a pending transaction record
   recordTransaction(data, { userId: user.id, type: 'withdrawal', amount: withdrawAmount, status: 'pending', meta: { withdrawalId: withdrawal.id } });
+  // notify user that withdrawal was submitted
+  createNotification(data, { userId: user.id, title: 'Withdrawal submitted', text: `Your withdrawal request of ₦${withdrawAmount} was submitted and is awaiting admin verification.`, type: 'info' });
   writeData(data);
   res.json({ withdrawal });
 });

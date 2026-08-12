@@ -171,9 +171,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderActivePlan(currentUser);
     renderTransactions(transactionsRes.transactions || []);
     notificationCountEl.textContent = (notificationsRes.notifications || []).length;
+   // render notifications list for modal
+   const notificationsListEl = document.getElementById('notifications-list');
+   if(notificationsListEl){
+     const notifs = (notificationsRes.notifications || []).slice(0, 50);
+     notificationsListEl.innerHTML = notifs.length ? notifs.map(n => `
+       <article class="note-panel" style="padding:8px; margin-bottom:8px;">
+         <div><strong>${n.title || 'Notification'}</strong></div>
+         <div class="muted">${n.text || ''}</div>
+         <div class="muted" style="font-size:12px; margin-top:6px;">${new Date(n.createdAt || Date.now()).toLocaleString()}</div>
+       </article>
+     `).join('') : '<div class="muted">No notifications yet.</div>';
+   }
   }
-
+ 
   await loadDashboardData();
+
+  // Notifications modal wiring
+  const notificationsButton = document.getElementById('notifications-button');
+  const notificationsModal = document.getElementById('notifications-modal');
+  const notificationsModalClose = document.getElementById('notifications-modal-close');
+  notificationsButton?.addEventListener('click', () => { if(notificationsModal) notificationsModal.classList.remove('hidden'); });
+  notificationsModalClose?.addEventListener('click', () => { if(notificationsModal) notificationsModal.classList.add('hidden'); });
 
   const communityModal = document.getElementById('community-modal');
   const shouldShowCommunity = localStorage.getItem('ff_show_community') === '1' && !localStorage.getItem('ff_community_dismissed');

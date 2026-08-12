@@ -31,14 +31,14 @@
       <div class="section-heading">
         <div>
           <h2>Assigned bank transfer deposit</h2>
-          <p class="muted">Your account is prepared dynamically and assigned once for safe deposits.</p>
+          <p class="muted">Transfer your funds to the account below and include the payment reference shown after initiating a deposit.</p>
         </div>
         <span class="status-pill">Active</span>
       </div>
 
       <div class="paystack-account-card card" id="deposit-placeholder-card">
         <div class="deposit-account-placeholder">
-          <div class="muted">Enter the amount you want to deposit (minimum ₦3,000) and continue to view your assigned virtual account details.</div>
+          <div class="muted">Loading your assigned funding account...</div>
         </div>
       </div>
 
@@ -70,6 +70,18 @@
             <div class="deposit-load-message">Loading your virtual deposit account...</div>
           </div>
           <div id="payment-account-card"></div>
+          <!-- Bank transfer reference input: collect the narration/reference the user used in their bank transfer -->
+          <div id="bank-transfer-confirm" style="margin-top:12px;">
+            <div class="form-field">
+              <label>Bank Transfer Reference / Narration</label>
+              <input type="text" id="bank-transfer-reference" placeholder="Enter the reference used in your bank transfer (optional)" />
+              <div class="muted" style="margin-top:6px">Enter exactly what you used as the narration/description in your bank transfer.</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button id="confirm-payment-btn" class="btn primary large-confirm" type="button">I Have Made the Payment</button>
+              <button class="btn ghost" type="button" id="payment-back">Back</button>
+            </div>
+          </div>
         </div>
 
         <div class="note-panel card" style="margin-top:16px;">

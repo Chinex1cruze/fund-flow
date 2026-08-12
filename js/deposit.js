@@ -165,15 +165,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       paymentAccountCard.innerHTML = `
         <div class="deposit-account-grid">
           <div>
-            <div class="account-stat-label">Virtual bank</div>
+            <div class="account-stat-label">Bank Name</div>
             <div class="account-stat-value">${account.bankName || '—'}</div>
           </div>
           <div>
-            <div class="account-stat-label">Virtual account number</div>
+            <div class="account-stat-label">Account Number</div>
             <div class="account-stat-value">${account.accountNumber || '—'}</div>
           </div>
           <div>
-            <div class="account-stat-label">Account name</div>
+            <div class="account-stat-label">Account Name</div>
             <div class="account-stat-value">${account.accountName || '—'}</div>
           </div>
           <div>
@@ -182,9 +182,9 @@ document.addEventListener('DOMContentLoaded', async ()=>{
           </div>
         </div>
           <div style="margin-top:12px;">
-            <div class="muted">Payment reference</div>
+            <div class="muted">Payment Reference (FundFlow)</div>
             <div class="account-stat-value" id="payment-reference">${account.paymentReference || '—'}</div>
-            <div class="muted" style="margin-top:6px">Include this reference in your bank transfer narration/description. Example: ${account.paymentReference || 'FF-824915'}</div>
+            <div class="muted" style="margin-top:6px">After transferring the money, include the payment reference shown above in your bank transfer narration/description. Example: ${account.paymentReference || 'FF-824915'}</div>
           </div>
           <div class="account-copy-row">
             <button type="button" id="copy-account-number-2" class="btn primary">Copy Account Number</button>
@@ -200,12 +200,50 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         catch(err){ showToast('Unable to copy the payment reference', 'warning'); }
       });
 
-      // prefill the hidden tx input so the server receives the same reference when confirming
-      if(paymentTxInput) paymentTxInput.value = account.paymentReference || '';
-      // make the tx input readonly so users don't accidentally change it
-      if(paymentTxInput) paymentTxInput.setAttribute('readonly', 'true');
+      // Show the FundFlow payment reference prominently and ensure the user can enter their own bank transfer narration separately
+      const bankTransferInput = document.getElementById('bank-transfer-reference');
+      const paymentRefEl = document.getElementById('payment-reference');
+      if(paymentRefEl) paymentRefEl.textContent = account.paymentReference || '';
+
+      // Wire copy buttons
+      document.getElementById('copy-account-number-2')?.addEventListener('click', async () => {
+        try{ await navigator.clipboard.writeText(account.accountNumber || ''); showToast('Account Number copied.', 'success'); }
+        catch(err){ showToast('Unable to copy the account number', 'warning'); }
+      });
+      document.getElementById('copy-payment-ref')?.addEventListener('click', async () => {
+        try{ await navigator.clipboard.writeText(account.paymentReference || ''); showToast('Payment reference copied.', 'success'); }
+        catch(err){ showToast('Unable to copy the payment reference', 'warning'); }
+      });
 
       paymentAccountLoader.classList.add('hidden');
+
+      // Wire the new "I Have Made the Payment" button
+      const confirmBtn = document.getElementById('confirm-payment-btn');
+      confirmBtn?.addEventListener('click', async () => {
+        try{
+          const btRef = (bankTransferInput && bankTransferInput.value.trim()) || '';
+          // disable to prevent duplicates
+          confirmBtn.disabled = true;
+          confirmBtn.dataset.prevText = confirmBtn.innerHTML;
+          confirmBtn.innerHTML = '<span class="loader"></span> Submitting';
+          const payload = {
+            amount: amt,
+            paymentReference: account.paymentReference || '',
+            bankTransferReference: btRef,
+            screenshot: null
+          };
+          const res = await api.deposit(payload);
+          if(res && res.deposit){
+            showToast('Deposit submitted and pending verification by admin.', 'success');
+            // give user the generated FundFlow reference in a toast
+            try{ const ref = res.deposit.transactionReference; if(ref) showToast(`Reference: ${ref}`, 'info', 6000); }catch(e){}
+            setTimeout(()=> location.href = 'dashboard.html', 900);
+          } else showToast('Deposit submission failed', 'error');
+        }catch(err){ console.error(err); showToast(err.message || 'Deposit failed', 'error'); }
+        finally{
+          if(confirmBtn){ confirmBtn.disabled = false; if(confirmBtn.dataset.prevText) confirmBtn.innerHTML = confirmBtn.dataset.prevText; }
+        }
+      });
     }catch(err){
       paymentAccountLoader.classList.add('hidden');
       paymentAccountCard.innerHTML = '<div class="muted">Unable to load the secure deposit account right now.</div>';
