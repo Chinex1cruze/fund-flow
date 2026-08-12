@@ -423,18 +423,8 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
   const amount = Number(req.query.amount || 0);
   if(amount && amount >= 3000){
     data.virtualAccounts = data.virtualAccounts || [];
-    // select a deposit account to back this virtual account (rotate cursor)
-    const base = getNextDepositAccount(data) || { bankName: 'Access Bank', accountNumber: '1909738594', accountName: 'FundFlow', status: 'active' };
-
-    // generate a unique 10-digit virtual account number
-    function genAccountNumber(){
-      let n = '';
-      for(let i=0;i<10;i++) n += Math.floor(Math.random()*10).toString();
-      return n;
-    }
-    let accountNumber = genAccountNumber();
-    const existingNumbers = new Set([...(data.depositAccounts||[]).map(a=>String(a.accountNumber)), ...(data.virtualAccounts||[]).map(v=>String(v.accountNumber))]);
-    while(existingNumbers.has(accountNumber)) accountNumber = genAccountNumber();
+    // Select an active configured deposit account to back this virtual session (round-robin via cursor)
+    const base = getNextDepositAccount(data) || { id: 'acct-fallback', bankName: 'Access Bank', accountNumber: '1909738594', accountName: 'FundFlow', status: 'active' };
 
     const now = Date.now();
     // generate a unique payment reference for this payment session (shown to user)
@@ -443,11 +433,13 @@ app.get('/api/deposit-account', authMiddleware, (req, res) => {
       id: 'va-' + now,
       userId: user.id,
       bankName: base.bankName,
-      accountNumber,
+      // Use the authoritative configured account number from the backing account (no random numbers)
+      accountNumber: base.accountNumber,
       accountName: base.accountName || user.fullName || 'FundFlow',
       status: 'active',
       amount: amount,
       paymentReference: paymentReference,
+      backingAccountId: base.id || null,
       createdAt: now,
       expiresAt: now + 10 * 60 * 1000, // payment window 10 minutes
       closeAt: now + 3 * 60 * 1000 // auto-close after 3 minutes
@@ -586,12 +578,24 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
     status: 'pending',
     statusHistory: [{ status: 'pending', at: Date.now() }],
     createdAt: Date.now(),
-    referralProcessed: false
+    referralProcessed: false,
+    backingAccountId: null
   };
 
+  // If this deposit references a virtual session, attach its backingAccountId for traceability
+  try{
+    if(deposit.paymentReference){
+      data.virtualAccounts = data.virtualAccounts || [];
+      const va = data.virtualAccounts.find(v => String(v.paymentReference) === String(deposit.paymentReference));
+      if(va && va.backingAccountId) deposit.backingAccountId = va.backingAccountId;
+    }
+  }catch(e){ /* ignore */ }
+  // Fallback: if user has an assignedDepositAccountId, use that
+  if(!deposit.backingAccountId && user.assignedDepositAccountId) deposit.backingAccountId = user.assignedDepositAccountId;
+
   data.deposits.push(deposit);
-  // create a pending transaction record
-  recordTransaction(data, { userId: user.id, type: 'deposit', amount: depositAmount, status: 'pending', meta: { depositId: deposit.id, transactionReference: deposit.transactionReference, paymentReference: deposit.paymentReference, bankTransferReference: deposit.bankTransferReference } });
+  // create a pending transaction record with backingAccountId included in meta
+  recordTransaction(data, { userId: user.id, type: 'deposit', amount: depositAmount, status: 'pending', meta: { depositId: deposit.id, transactionReference: deposit.transactionReference, paymentReference: deposit.paymentReference, bankTransferReference: deposit.bankTransferReference, backingAccountId: deposit.backingAccountId } });
   // notify user that deposit was submitted and include reference in message
   createNotification(data, { userId: user.id, title: 'Deposit submitted', text: `Your deposit request of ₦${depositAmount} was submitted and is pending admin verification. Reference: ${deposit.transactionReference}`, type: 'info' });
   writeData(data);
@@ -843,6 +847,12 @@ app.get('/api/admin/stats', adminAuthMiddleware, (req, res) => {
 
 app.get('/api/admin/verify', adminAuthMiddleware, (req, res) => {
   res.json({ ok: true, message: 'Admin access verified' });
+});
+
+// Admin: list virtual deposit sessions for reconciliation
+app.get('/api/admin/virtual-accounts', adminAuthMiddleware, (req, res) => {
+  const data = readData();
+  res.json({ virtualAccounts: data.virtualAccounts || [] });
 });
 
 // Server-side admin login: accepts token and sets a secure httpOnly cookie for the admin session.

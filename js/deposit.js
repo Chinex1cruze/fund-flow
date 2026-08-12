@@ -11,7 +11,10 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       const resp = await api.getDepositAccount();
       const account = resp.account || {};
       // Render assigned account into the top card so it's never empty
-      depositPlaceholderCard.innerHTML = `\n        <div class="deposit-account-grid">\n          <div>\n            <div class="account-stat-label">Bank Name</div>\n            <div class="account-stat-value">${account.bankName || '—'}</div>\n          </div>\n          <div>\n            <div class="account-stat-label">Account Number</div>\n            <div class="account-stat-value" id="assigned-account-number">${account.accountNumber || '—'}</div>\n          </div>\n          <div>\n            <div class="account-stat-label">Account Name</div>\n            <div class="account-stat-value">${account.accountName || '—'}</div>\n          </div>\n        </div>\n        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">\n          <button type="button" id="copy-assigned-account" class="btn primary">Copy Account Number</button>\n          <span class="muted">Status: ${account.status || 'Active'}</span>\n        </div>\n      `;
+      depositPlaceholderCard.innerHTML = `\n        <div class="deposit-account-grid">\n          <div>\n            <div class="account-stat-label">Bank Name</div>\n            <div class="account-stat-value">${account.bankName || '—'}</div>\n          </div>\n          <div>\n            <div class="account-stat-label">Account Number</div>\n            <div class="account-stat-value" id="assigned-account-number">${account.accountNumber || '—'}</div>\n          </div>\n          <div>\n            <div class="account-stat-label">Account Name</div>\n            <div class="account-stat-value">${account.accountName || '—'}</div>\n          </div>\n        </div>\n        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">\n          <button type="button" id="copy-assigned-account" class="btn primary">Copy Account Number</button>\n          <div style="display:flex;flex-direction:column;">
+            <span class="muted">Status: ${account.status || 'Active'}</span>
+            <span class="muted">Account ID: ${account.id || account.backingAccountId || '—'}</span>
+          </div>\n        </div>\n      `;
 
       // Wire copy button
       const copyBtn = document.getElementById('copy-assigned-account');
@@ -185,11 +188,12 @@ document.addEventListener('DOMContentLoaded', async ()=>{
             <div class="muted">Payment Reference (FundFlow)</div>
             <div class="account-stat-value" id="payment-reference">${account.paymentReference || '—'}</div>
             <div class="muted" style="margin-top:6px">After transferring the money, include the payment reference shown above in your bank transfer narration/description. Example: ${account.paymentReference || 'FF-824915'}</div>
-          </div>
-          <div class="account-copy-row">
-            <button type="button" id="copy-account-number-2" class="btn primary">Copy Account Number</button>
-            <button type="button" id="copy-payment-ref" class="btn ghost">Copy Reference</button>
-          </div>
+          <div class="muted" style="margin-top:6px">Using configured account: <strong>${account.backingAccountId || account.id || '—'}</strong></div>
+        </div>
+        <div class="account-copy-row">
+          <button type="button" id="copy-account-number-2" class="btn primary">Copy Account Number</button>
+          <button type="button" id="copy-payment-ref" class="btn ghost">Copy Reference</button>
+        </div>
         `;
       document.getElementById('copy-account-number-2')?.addEventListener('click', async () => {
         try{ await navigator.clipboard.writeText(account.accountNumber || ''); showToast('Account Number copied.', 'success'); }

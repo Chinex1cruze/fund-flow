@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="muted">FundFlow Ref: ${item.transactionReference || '—'}</div>
         <div class="muted">Payment Ref: ${item.paymentReference || '—'}</div>
         <div class="muted">Bank Transfer Ref: ${item.bankTransferReference || '—'}</div>
+        <div class="muted">Backing Account: ${item.backingAccountId || (item.meta && item.meta.backingAccountId) || '—'}</div>
         <div class="muted">Status: ${item.status || 'pending'}</div>
         <div class="button-row">
           <button class="btn primary" data-action="approve-deposit" data-id="${item.id}">Approve</button>
