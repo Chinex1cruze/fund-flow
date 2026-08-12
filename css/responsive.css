@@ -42,6 +42,7 @@
 
 /* Ensure no horizontal overflow for utility elements */
 img, .dashboard-banner, .deposit-hero-card, .modal-banner{max-width:100%; height:auto}
+.toast{max-width:calc(100% - 32px);}
 
 /* Keep any page-specific responsive overrides allowed at min-width breakpoints */
 @media (min-width:431px) and (max-width:699px){
