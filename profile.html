@@ -10,10 +10,26 @@
 <body>
   <div data-include="components/navbar.html"></div>
   <main class="page container">
+    <section class="dashboard-header card" style="margin-bottom:12px;padding:12px;">
+      <div class="dashboard-profile-row">
+        <div style="width:48px;height:48px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.04);display:grid;place-items:center;">
+          <img src="assets/logo/fund_flow.jpeg" alt="FundFlow" style="width:100%;height:100%;object-fit:cover;" />
+        </div>
+        <div>
+          <div class="dashboard-greeting">Profile</div>
+          <div class="dashboard-user-name">Manage your account</div>
+        </div>
+      </div>
+      <div style="margin-left:auto; text-align:right;">
+        <div class="muted">Status</div>
+        <div style="font-weight:700" id="profile-status">Active</div>
+      </div>
+    </section>
+
     <section class="card profile-card">
       <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:92px;height:92px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,0.04);display:grid;place-items:center;">
+          <div style="width:92px;height:92px;border-radius:var(--radius);overflow:hidden;background:rgba(255,255,255,0.04);display:grid;place-items:center;">
             <img id="profile-picture-preview" src="assets/logo/fund_flow.jpeg" alt="Profile" style="width:100%;height:100%;object-fit:cover;" />
           </div>
           <div style="display:flex;flex-direction:column;gap:8px;">
@@ -21,7 +37,7 @@
             <input type="file" id="profile-picture-input" accept="image/*" />
           </div>
         </div>
-        <div style="flex:1;min-width:200px;">
+        <div style="flex:1;min-width:120px;max-width:100%;">
           <h2>Profile</h2>
           <div style="margin-top:8px">
             <label class="muted">Full name</label>

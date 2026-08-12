@@ -57,8 +57,36 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       const settingsRes = await api.getPaymentSettings?.() || {};
       const fee = Number((settingsRes.settings && settingsRes.settings.withdrawalFee) || 0);
       const net = Math.max(0, amt - fee);
-      const confirmMsg = `Confirm Withdrawal:\n\nAmount: ₦${formatN(amt)}\nBank: ${bank}\nAccount Number: ${acctNo}\nAccount Name: ${acctName}\nWithdrawal Fee: ₦${formatN(fee)}\nNet Amount: ₦${formatN(net)}\n\nPlease confirm that the bank details are correct. FundFlow cannot verify the account name automatically at this time.`;
-      if(!confirm(confirmMsg)) { stopLoading(); return; }
+      const confirmMsg = `Amount: ₦${formatN(amt)}\nBank: ${bank}\nAccount Number: ${acctNo}\nAccount Name: ${acctName}\nWithdrawal Fee: ₦${formatN(fee)}\nNet Amount: ₦${formatN(net)}`;
+
+      // Show styled modal confirmation instead of native confirm()
+      const modal = document.getElementById('withdraw-confirm-modal');
+      const modalBody = document.getElementById('withdraw-confirm-body');
+      const confirmBtn = document.getElementById('withdraw-confirm-btn');
+      const cancelBtn = document.getElementById('withdraw-cancel-btn');
+      const closeBtn = document.getElementById('withdraw-confirm-close');
+      if(modal && modalBody && confirmBtn && cancelBtn && closeBtn){
+        modalBody.textContent = `Please confirm the withdrawal details:\n\n${confirmMsg}`;
+        modal.classList.remove('hidden');
+        // return a promise that resolves when user confirms/cancels
+        const choice = await new Promise((resolve) => {
+          function cleanup(){
+            modal.classList.add('hidden');
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+            closeBtn.removeEventListener('click', onCancel);
+          }
+          function onConfirm(){ cleanup(); resolve(true); }
+          function onCancel(){ cleanup(); resolve(false); }
+          confirmBtn.addEventListener('click', onConfirm);
+          cancelBtn.addEventListener('click', onCancel);
+          closeBtn.addEventListener('click', onCancel);
+        });
+        if(!choice){ stopLoading(); return; }
+      }else{
+        // fallback to native confirm if modal not available
+        if(!confirm(`Confirm Withdrawal:\n\n${confirmMsg}`)) { stopLoading(); return; }
+      }
 
       // Submit withdrawal request to server (server is authoritative and will reserve funds)
       const res = await api.withdraw({ amount: amt, bankName: bank, accountNumber: acctNo, accountName: acctName });

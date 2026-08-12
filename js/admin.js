@@ -1,11 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  // Verify server-side admin session (cookie) before loading. If not authenticated, redirect to login.
-  try {
-    const res = await fetch('/api/admin/verify');
-    if(!res.ok){ location.href = 'admin-login.html'; return; }
-  } catch (e) { location.href = 'admin-login.html'; return; }
-
   const tokenInput = document.getElementById('admin-token');
+  const adminLoginBtn = document.getElementById('admin-login-btn');
+  const adminContent = document.getElementById('admin-content');
+
   const statsGrid = document.getElementById('stats-grid');
   const depositsList = document.getElementById('deposits-list');
   const withdrawalsList = document.getElementById('withdrawals-list');
@@ -15,12 +12,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const announcementsList = document.getElementById('announcements-list');
   const createAnnouncementBtn = document.getElementById('create-announcement');
 
-  // Do not rely on localStorage for admin session in production. Server establishes a secure httpOnly cookie.
-
+  // Admin fetch helper that includes x-admin-token from the UI input when present
   async function adminFetch(url, options = {}) {
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     const adminToken = (tokenInput?.value || '').trim();
-    if(adminToken) headers['x-admin-token'] = adminToken; // allow override if provided in the UI
+    if(adminToken) headers['x-admin-token'] = adminToken; // allow override via UI input
     const res = await fetch(url, {
       headers,
       ...options
@@ -29,6 +25,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(!res.ok){ throw new Error(data.message || 'Admin request failed'); }
     return data;
   }
+
+  // Attempt server-side verify first (cookie-based admin session)
+  let serverVerified = false;
+  try{
+    const res = await fetch('/api/admin/verify');
+    serverVerified = res.ok;
+  }catch(e){ serverVerified = false; }
+
+  if(serverVerified){
+    // show admin content and proceed to load queue
+    adminContent?.classList.remove('hidden');
+  } else {
+    // keep content hidden until admin token is provided via UI
+    adminContent?.classList.add('hidden');
+  }
+
+  // Wire up Load button to exchange token for a server-side admin session cookie
+  adminLoginBtn?.addEventListener('click', async () => {
+    const token = (tokenInput?.value || '').trim();
+    if(!token){ showToast('Enter admin token', 'warning'); return; }
+    try{
+      const resp = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+      const data = await resp.json();
+      if(!resp.ok) throw new Error(data.message || 'Admin login failed');
+      // Successfully created server-side admin session (httpOnly cookie). Show admin content and load queue.
+      adminContent?.classList.remove('hidden');
+      document.getElementById('admin-logout-btn')?.classList.remove('hidden');
+      document.getElementById('admin-login-btn')?.classList.add('hidden');
+      tokenInput.value = '';
+      await loadQueue();
+      showToast('Admin session established', 'success');
+    }catch(err){ showToast(err.message || 'Admin login failed', 'error'); }
+  });
+
+  // Wire up logout button: call server to clear admin cookie and hide admin content
+  document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
+    try{
+      await fetch('/api/admin/logout', { method: 'POST' });
+    }catch(e){}
+    adminContent?.classList.add('hidden');
+    document.getElementById('admin-logout-btn')?.classList.add('hidden');
+    document.getElementById('admin-login-btn')?.classList.remove('hidden');
+    showToast('Admin session ended', 'info');
+  });
+
+  // If server-verified at page load, show logout button and load queue
+  if(serverVerified){
+    document.getElementById('admin-logout-btn')?.classList.remove('hidden');
+    try{ await loadQueue(); }catch(e){}
+  }
+
 
   function createStatCard(label, value) {
     return `
