@@ -11,13 +11,45 @@
   <div data-include="components/navbar.html"></div>
   <main class="page container">
     <section class="card profile-card">
-      <h2>Profile</h2>
-      <div><strong>Full Name:</strong> <span id="profile-name"></span></div>
-      <div><strong>Phone:</strong> <span id="profile-phone"></span></div>
-      <div><strong>Wallet Balance:</strong> ₦<span id="profile-balance"></span></div>
-      <div style="display:flex; align-items:center; gap:8px;"><strong>Referral Code:</strong> <span id="profile-ref-code"></span> <button class="btn small" id="copy-ref-code">COPY</button></div>
-      <div style="display:flex; align-items:center; gap:8px;"><strong>Referral Link:</strong> <a id="profile-ref-link" href="#"></a> <button class="btn small" id="copy-ref-link">COPY</button></div>
-      <div class="mt-2"><button class="btn outline" id="logout-btn">Logout</button></div>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:92px;height:92px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,0.04);display:grid;place-items:center;">
+            <img id="profile-picture-preview" src="assets/logo/fund_flow.jpeg" alt="Profile" style="width:100%;height:100%;object-fit:cover;" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label class="muted">Profile picture</label>
+            <input type="file" id="profile-picture-input" accept="image/*" />
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <h2>Profile</h2>
+          <div style="margin-top:8px">
+            <label class="muted">Full name</label>
+            <input id="profile-name-input" type="text" class="form-control" style="width:100%;padding:10px;border-radius:8px;margin-top:6px;" disabled />
+          </div>
+          <div style="margin-top:8px">
+            <label class="muted">Phone</label>
+            <input id="profile-phone-input" type="text" class="form-control" style="width:100%;padding:10px;border-radius:8px;margin-top:6px;" disabled />
+          </div>
+          <div style="margin-top:8px">
+            <label class="muted">Wallet Balance</label>
+            <div style="margin-top:6px;font-weight:700">₦<span id="profile-balance"></span></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button class="btn outline" id="edit-profile-btn" type="button">Edit</button>
+            <button class="btn primary hidden" id="save-profile-btn" type="button">Save</button>
+            <button class="btn ghost hidden" id="cancel-profile-btn" type="button">Cancel</button>
+            <button class="btn" id="logout-btn" style="margin-left:auto;">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:16px 0" />
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><strong>Referral Code:</strong> <span id="profile-ref-code"></span> <button class="btn small" id="copy-ref-code">COPY</button></div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><strong>Referral Link:</strong> <a id="profile-ref-link" href="#"></a> <button class="btn small" id="copy-ref-link">COPY</button></div>
+      </div>
     </section>
   </main>
   <div data-include="components/footer.html"></div>
