@@ -28,8 +28,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     }
   }
 
-  // Kick off load on page load
-  loadAssignedAccount();
+  // Do NOT load assigned account on page load. Account details will be shown after user enters a valid amount.
 
   // Elements
 

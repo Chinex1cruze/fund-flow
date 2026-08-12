@@ -604,6 +604,10 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
   recordTransaction(data, { userId: user.id, type: 'deposit', amount: depositAmount, status: 'pending', meta: { depositId: deposit.id, transactionReference: deposit.transactionReference, paymentReference: deposit.paymentReference, bankTransferReference: deposit.bankTransferReference, backingAccountId: deposit.backingAccountId } });
   // notify user that deposit was submitted and include reference in message
   createNotification(data, { userId: user.id, title: 'Deposit submitted', text: `Your deposit request of ₦${depositAmount} was submitted and is pending admin verification. Reference: ${deposit.transactionReference}`, type: 'info' });
+  // create an admin notification for dashboard visibility (persistent)
+  try{
+    createNotification(data, { userId: 'admin', title: 'New deposit submitted', text: `${user.fullName || user.phone || user.id} submitted a deposit of ₦${depositAmount}. Reference: ${deposit.transactionReference}`, type: 'admin' });
+  }catch(e){}
   writeData(data);
 
   res.json({ deposit });
@@ -888,6 +892,13 @@ app.get('/api/admin/verify', adminAuthMiddleware, (req, res) => {
 app.get('/api/admin/virtual-accounts', adminAuthMiddleware, (req, res) => {
   const data = readData();
   res.json({ virtualAccounts: data.virtualAccounts || [] });
+});
+
+// Admin: notifications for admin dashboard
+app.get('/api/admin/notifications', adminAuthMiddleware, (req, res) => {
+  const data = readData();
+  const notes = (data.notifications || []).filter(n => String(n.userId) === 'admin' || !n.userId || String(n.type) === 'admin');
+  res.json({ notifications: notes });
 });
 
 // Server-side admin login: accepts token and sets a secure httpOnly cookie for the admin session.

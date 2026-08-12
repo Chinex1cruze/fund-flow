@@ -173,14 +173,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadQueue() {
     try {
-      const [stats, deposits, withdrawals, users, accounts, announcements, transactions] = await Promise.all([
+      const [stats, deposits, withdrawals, users, accounts, announcements, transactions, adminNotifications] = await Promise.all([
         adminFetch('/api/admin/stats'),
         adminFetch('/api/admin/deposits'),
         adminFetch('/api/admin/withdrawals'),
         adminFetch('/api/admin/users'),
         adminFetch('/api/admin/deposit-accounts'),
         adminFetch('/api/admin/announcements'),
-        adminFetch('/api/admin/transactions')
+      adminFetch('/api/admin/transactions'),
+      adminFetch('/api/admin/notifications')
       ]);
 
       statsGrid.innerHTML = [
@@ -203,6 +204,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       }catch(e){ /* ignore */ }
       renderAnnouncements(announcements.announcements || []);
       renderTransactions(transactions.transactions || []);
+      // Render admin notifications (persistent)
+      try{
+        const an = adminNotifications && adminNotifications.notifications ? adminNotifications.notifications : [];
+        const container = document.getElementById('admin-notifications');
+        if(container){
+          container.innerHTML = an.length ? an.map(n => `
+            <article class="note-panel card" style="margin:6px 0;">
+              <div><strong>${n.title}</strong></div>
+              <div class="muted">${n.text}</div>
+              <div class="muted" style="font-size:12px">${new Date(n.createdAt || Date.now()).toLocaleString()}</div>
+            </article>
+          `).join('') : '<div class="muted">No admin notifications.</div>';
+        }
+      }catch(e){/* ignore */}
     } catch (err) {
       showToast(err.message || 'Failed to load admin queue', 'error');
     }
