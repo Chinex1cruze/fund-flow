@@ -84,6 +84,13 @@ function ensureDataFile(){
   }
 }
 
+function buildReferralLink(code, req = null){
+  const codeValue = String(code || '').trim();
+  const envBase = (process.env.BASE_URL || '').replace(/\/$/, '');
+  const base = envBase || (req && req.headers && req.headers.host ? `${req.protocol || 'http'}://${req.get('host')}` : 'http://localhost:3000');
+  return `${base.replace(/\/$/, '')}/register.html?ref=${encodeURIComponent(codeValue)}`;
+}
+
 function normalizeData(data){
   const normalized = data || {};
   normalized.users = normalized.users || [];
@@ -111,8 +118,8 @@ function normalizeData(data){
       u.referralCode = code;
       existingCodes.add(code.toLowerCase());
     }
-    if(!u.referralLink){
-      u.referralLink = (process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(u.referralCode || '')}`;
+    if(!u.referralLink || u.referralLink.startsWith('/')){
+      u.referralLink = buildReferralLink(u.referralCode);
     }
     // ensure flag exists
     if(typeof u.referralRewardProcessed === 'undefined') u.referralRewardProcessed = false;
@@ -392,7 +399,7 @@ app.post('/api/auth/register', (req, res) => {
   let referralCode = genRef();
   const existingCodes = new Set((data.users || []).map(u => String(u.referralCode || '').toLowerCase()).filter(Boolean));
   while(existingCodes.has(referralCode.toLowerCase())) referralCode = genRef();
-  const referralLink = (process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(referralCode)}`;
+  const referralLink = buildReferralLink(referralCode, req);
 
   const user = {
     id,
@@ -491,9 +498,11 @@ app.get('/api/referrals', authMiddleware, (req, res) => {
 
   const history = referralTxs.map(t => ({ id: t.id, amount: t.amount, status: t.status, createdAt: t.createdAt, meta: t.meta || {} }));
 
+  const referralLink = user.referralLink && !user.referralLink.startsWith('/') ? user.referralLink : buildReferralLink(user.referralCode || '', req);
+
   res.json({
     referralCode: user.referralCode || null,
-    referralLink: user.referralLink || ((process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(user.referralCode || '')}`),
+    referralLink,
     totalReferrals: referredUsers.length,
     totalReferralEarnings: totalReferralEarnings,
     referrals: referredUsers.map(u=>({ id: u.id, fullName: u.fullName, phone: u.phone, createdAt: u.createdAt || null })),

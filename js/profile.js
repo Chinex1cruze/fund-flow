@@ -27,7 +27,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     phoneInput.value = u.phone || '';
     balanceEl.textContent = formatN(u.balance || 0);
     refCodeEl.textContent = u.referralCode || '—';
-    const link = u.referralLink || (window.location.origin + `/register.html?ref=${encodeURIComponent(u.referralCode || '')}`);
+    const normalizeLink = (value, code) => {
+      if(!value) return `${window.location.origin}/register.html?ref=${encodeURIComponent(code || '')}`;
+      if(/^https?:\/\//i.test(value)) return value;
+      if(value.startsWith('/')) return `${window.location.origin}${value}`;
+      return new URL(value, window.location.origin).toString();
+    };
+    const link = normalizeLink(u.referralLink, u.referralCode || '');
     refLinkEl.href = link; refLinkEl.textContent = link;
     if(u.profilePicture) picPreview.src = u.profilePicture;
   }
