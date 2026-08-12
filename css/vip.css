@@ -1,4 +1,14 @@
 @import './style.css';
-.vip-grid{grid-template-columns:repeat(1,1fr)}
+/* Mobile-first VIP styles */
+.vip-grid{display:grid; grid-template-columns:1fr; gap:12px}
+.vip-card{padding:16px; border-radius:14px; display:flex; flex-direction:column; gap:10px}
 .vip-card .meta{font-size:13px; color:var(--text-secondary)}
-@media(min-width:700px){.vip-grid{grid-template-columns:repeat(3,1fr)}}
+.vip-card .vip-actions{display:flex; gap:8px; margin-top:6px}
+.vip-card .vip-actions .btn{flex:1}
+.vip-card strong{font-size:16px}
+@media(min-width:480px){
+  .vip-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(min-width:768px){
+  .vip-grid{grid-template-columns:repeat(3,1fr)}
+}
