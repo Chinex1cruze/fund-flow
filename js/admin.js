@@ -41,26 +41,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     adminContent?.classList.add('hidden');
   }
 
-  // If server-verified or after admin provides token, load the queue
-  async function tryLoadQueueWithToken(){
-    try{
-      // quick validation call to ensure token is valid
-      await adminFetch('/api/admin/stats');
-      adminContent?.classList.remove('hidden');
-      await loadQueue();
-      showToast('Admin access granted', 'success');
-    }catch(err){
-      showToast(err.message || 'Invalid admin token', 'error');
-      adminContent?.classList.add('hidden');
-    }
-  }
-
+  // Wire up Load button to exchange token for a server-side admin session cookie
   adminLoginBtn?.addEventListener('click', async () => {
-    await tryLoadQueueWithToken();
+    const token = (tokenInput?.value || '').trim();
+    if(!token){ showToast('Enter admin token', 'warning'); return; }
+    try{
+      const resp = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+      const data = await resp.json();
+      if(!resp.ok) throw new Error(data.message || 'Admin login failed');
+      // Successfully created server-side admin session (httpOnly cookie). Show admin content and load queue.
+      adminContent?.classList.remove('hidden');
+      document.getElementById('admin-logout-btn')?.classList.remove('hidden');
+      document.getElementById('admin-login-btn')?.classList.add('hidden');
+      tokenInput.value = '';
+      await loadQueue();
+      showToast('Admin session established', 'success');
+    }catch(err){ showToast(err.message || 'Admin login failed', 'error'); }
   });
 
-  // If server verified, load immediately
+  // Wire up logout button: call server to clear admin cookie and hide admin content
+  document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
+    try{
+      await fetch('/api/admin/logout', { method: 'POST' });
+    }catch(e){}
+    adminContent?.classList.add('hidden');
+    document.getElementById('admin-logout-btn')?.classList.add('hidden');
+    document.getElementById('admin-login-btn')?.classList.remove('hidden');
+    showToast('Admin session ended', 'info');
+  });
+
+  // If server-verified at page load, show logout button and load queue
   if(serverVerified){
+    document.getElementById('admin-logout-btn')?.classList.remove('hidden');
     try{ await loadQueue(); }catch(e){}
   }
 

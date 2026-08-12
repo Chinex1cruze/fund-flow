@@ -1117,6 +1117,12 @@ app.post('/api/admin/login', (req, res) => {
   res.json({ ok: true, message: 'Admin session created' });
 });
 
+// Admin logout: clear admin cookie
+app.post('/api/admin/logout', adminAuthMiddleware, (req, res) => {
+  res.clearCookie('ff_admin');
+  res.json({ ok: true, message: 'Admin session cleared' });
+});
+
 app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-login.html'));
 });
