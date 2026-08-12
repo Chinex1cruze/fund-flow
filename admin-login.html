@@ -13,14 +13,14 @@
     <section class="card auth-card">
       <h2>Admin Login</h2>
       <p class="muted">Only administrators can access the FundFlow control room.</p>
-      <form id="admin-login-form">
-        <label>Admin Token<input type="password" id="admin-token" value="chinex002" required></label>
+      <form id="admin-login-form" autocomplete="off">
+        <label>Admin Token<input type="password" id="admin-token" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" required></label>
         <button class="btn primary" type="submit">Continue to Admin Dashboard</button>
       </form>
     </section>
   </main>
   <div data-include="components/footer.html"></div>
-  <script src="js/app.js"></script>ca
+  <script src="js/app.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/toast.js"></script>
   <script src="js/admin-login.js"></script>
