@@ -445,6 +445,28 @@ app.get('/api/users/me', authMiddleware, (req, res) => {
   res.json({ user: sanitizeUser(user) });
 });
 
+// Referral info for current user: code, link, stats and history
+app.get('/api/referrals', authMiddleware, (req, res) => {
+  const data = readData();
+  const user = findUserById(data, req.user.id);
+  if(!user) return res.status(404).json({ message: 'User not found' });
+
+  const referredUsers = (data.users || []).filter(u => String(u.referredBy) === String(user.id));
+  const referralTxs = (data.transactions || []).filter(t => t.userId === user.id && t.type === 'referral').sort((a,b)=>b.createdAt - a.createdAt);
+  const totalReferralEarnings = referralTxs.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+  const history = referralTxs.map(t => ({ id: t.id, amount: t.amount, status: t.status, createdAt: t.createdAt, meta: t.meta || {} }));
+
+  res.json({
+    referralCode: user.referralCode || null,
+    referralLink: user.referralLink || ((process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(user.referralCode || '')}`),
+    totalReferrals: referredUsers.length,
+    totalReferralEarnings: totalReferralEarnings,
+    referrals: referredUsers.map(u=>({ id: u.id, fullName: u.fullName, phone: u.phone, createdAt: u.createdAt || null })),
+    history
+  });
+});
+
 app.get('/api/vips', (req, res) => {
   res.json({ plans: VIP_PLANS });
 });
@@ -880,22 +902,28 @@ app.post('/api/admin/deposits/:id/approve', adminAuthMiddleware, (req, res) => {
   if(data.transactions) data.transactions.forEach(t => { if(t.meta && t.meta.depositId === deposit.id) t.status = 'approved'; });
   createNotification(data, { userId: deposit.userId, title: 'Deposit approved', text: `Your deposit of ₦${deposit.amount} has been approved and credited to your wallet.`, type: 'success' });
 
-  // Referral reward: credit 5% to the referrer when this is the referred user's FIRST approved deposit
+  // Referral reward: credit 5% to the referrer when a referred user's deposit is approved.
   try{
     if(user.referredBy && !deposit.referralProcessed){
-      // check if there are earlier approved deposits for this referred user
-      const earlierApproved = (data.deposits || []).some(d => d.userId === user.id && d.status === 'approved' && d.id !== deposit.id && (d.createdAt || 0) < (deposit.createdAt || 0));
-      if(!earlierApproved){
+      // Protect against self-referral and ensure referrer exists
+      if(user.referredBy !== user.id){
         const referrer = findUserById(data, user.referredBy);
         if(referrer){
-          const reward = Number(((deposit.amount || 0) * 0.05).toFixed(2));
-          referrer.balance = (referrer.balance || 0) + reward;
-          referrer.refEarnings = (referrer.refEarnings || 0) + reward;
-          referrer.referrals = (referrer.referrals || 0) + 1;
-          // create transaction record for referral earnings
-          recordTransaction(data, { userId: referrer.id, type: 'referral', amount: reward, status: 'approved', meta: { referredUserId: user.id, depositId: deposit.id } });
-          createNotification(data, { userId: referrer.id, title: 'Referral reward received', text: `You received ₦${reward} (5% of ₦${deposit.amount}) as referral reward.`, type: 'success' });
-          deposit.referralProcessed = true;
+          // Idempotency: ensure no referral transaction already exists for this deposit
+          data.transactions = data.transactions || [];
+          const existingReferralTx = (data.transactions || []).some(t => t.type === 'referral' && t.meta && String(t.meta.depositId) === String(deposit.id));
+          if(!existingReferralTx){
+            const reward = Number(((deposit.amount || 0) * 0.05).toFixed(2));
+            if(reward > 0){
+              referrer.balance = (referrer.balance || 0) + reward;
+              referrer.refEarnings = (referrer.refEarnings || 0) + reward;
+              referrer.referrals = (referrer.referrals || 0) + 1;
+              // create transaction record for referral earnings (approved immediately)
+              recordTransaction(data, { userId: referrer.id, type: 'referral', amount: reward, status: 'approved', meta: { referredUserId: user.id, depositId: deposit.id } });
+              createNotification(data, { userId: referrer.id, title: 'Referral reward received', text: `You received ₦${reward} (5% of ₦${deposit.amount}) as referral reward.`, type: 'success' });
+              deposit.referralProcessed = true;
+            }
+          }
         }
       }
     }

@@ -82,6 +82,13 @@ const api = {
     return { settings: { withdrawalFee: 0 } };
   },
 
+  getReferrals: async () => {
+    if(USE_API){
+      return apiFetch(`${API_BASE}/referrals`, { method: 'GET' });
+    }
+    return { referralCode: 'FF000000', referralLink: window.location.origin + '/register.html?ref=FF000000', totalReferrals: 0, totalReferralEarnings: 0, referrals: [], history: [] };
+  },
+
   getDepositAccount: async (opts = {}) => {
     // opts: { amount }
     if(USE_API){
