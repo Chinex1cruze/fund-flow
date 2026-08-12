@@ -1,5 +1,6 @@
-/* Main theme */
+/* Main theme and design tokens */
 :root{
+  /* Colors */
   --bg-main:#030304;
   --bg-secondary:#10131B;
   --card:#11131B;
@@ -10,7 +11,21 @@
   --error:#EF4444;
   --text-main:#F8FAFC;
   --text-secondary:#D1D5DB;
-  --radius:16px;
+
+  /* Spacing */
+  --space-xs:6px;
+  --space-sm:10px;
+  --space-md:16px;
+  --space-lg:24px;
+
+  /* Radii & sizes */
+  --radius:16px; /* card radius */
+  --btn-radius:14px;
+  --btn-padding-vertical:12px;
+  --btn-padding-horizontal:16px;
+
+  /* Typography */
+  --font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -20,7 +35,7 @@ body{
 }
 .container{padding:20px; max-width:960px; margin:0 auto}
 .card{background:var(--card); border:1px solid rgba(251,191,36,0.14); border-radius:var(--radius); padding:18px; box-shadow:0 10px 30px rgba(2,6,23,0.55); margin-bottom:16px}
-button.btn, .btn{display:inline-block; padding:12px 16px; border-radius:14px; text-decoration:none; cursor:pointer; border:none; transition:all .18s ease}
+button.btn, .btn{display:inline-block; padding:var(--btn-padding-vertical) var(--btn-padding-horizontal); border-radius:var(--btn-radius); text-decoration:none; cursor:pointer; border:none; transition:all .18s ease}
 .btn.primary{background:var(--primary); color:#fff; box-shadow:0 10px 25px rgba(251,191,36,0.18)}
 
 /* Prominent confirm button used on the payment step */
