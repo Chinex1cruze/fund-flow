@@ -1,4 +1,53 @@
-@import './style.css';
-/* Keep global responsive tweaks here */
-.container{padding:16px}
+/* Responsive/mobile layer for FundFlow — consolidated mobile rules */
+/* This file intentionally contains only responsive overrides and small-screen tweaks.
+   It should be included after page stylesheet (dashboard.css, auth.css, vip.css) so it can
+   override page-specific desktop rules for mobile devices. */
+
+/* Base container adjustments for small screens */
+.container{padding:12px}
+@media(min-width:360px){.container{padding:14px}}
+@media(min-width:480px){.container{padding:16px}}
 @media(min-width:1024px){.container{padding:24px}}
+
+/* General mobile card and button sizing */
+.card{padding:12px}
+.btn{padding:12px 14px}
+.btn.large-confirm{min-width:200px; padding:12px 18px}
+
+/* Brand and header tweaks */
+.brand-row .brand-image{width:44px; height:44px}
+
+/* Dashboard avatar and name sizing */
+.dashboard-avatar-wrap{width:52px; height:52px}
+.dashboard-user-name{font-size:20px}
+
+/* Wallet, actions and layout stacking on small screens */
+.wallet-card{padding:14px}
+.actions-grid{grid-template-columns:1fr; gap:8px}
+
+/* Form, filters and touch targets */
+.form-field input, .form-field select{padding:12px}
+.filter-row{padding:6px 0}
+.filter-btn{padding:8px 12px; border-radius:999px; white-space:nowrap; font-size:14px}
+
+/* Transactions list safe spacing */
+.transactions-list{padding-bottom:120px}
+
+/* Bottom navigation safe area for phones with home indicator */
+.bottom-nav{left:12px; right:12px; transform:none; width:auto; border-radius:16px; padding:8px}
+
+/* Modal adjustments on small screens */
+.modal-card{padding:16px}
+.modal-card h2{font-size:18px}
+
+/* Ensure no horizontal overflow for utility elements */
+img, .dashboard-banner, .deposit-hero-card, .modal-banner{max-width:100%; height:auto}
+
+/* Keep any page-specific responsive overrides allowed at min-width breakpoints */
+@media (min-width:431px) and (max-width:699px){
+  .container{padding:16px}
+}
+
+@media (min-width:700px){
+  /* Desktop-oriented adjustments are left to page stylesheets */
+}

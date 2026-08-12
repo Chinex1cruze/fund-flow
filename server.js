@@ -782,11 +782,14 @@ app.get('/api/admin/vips', adminAuthMiddleware, (req, res) => {
 });
 
 app.post('/api/withdrawals', authMiddleware, (req, res) => {
-  const { amount, bankName, accountNumber, verificationId } = req.body || {};
+  // New withdrawal flow: accept manual accountName (no mandatory external verification), reserve funds immediately,
+  // create a pending withdrawal record, create a pending transaction, and notify user and admin.
+  const { amount, bankName, accountNumber, accountName } = req.body || {};
   const withdrawAmount = Number(amount);
   if(!withdrawAmount || withdrawAmount <= 0) return res.status(400).json({ message: 'Invalid withdrawal amount' });
   if(!bankName) return res.status(400).json({ message: 'Bank selection is required' });
   if(!accountNumber || !/^\d{10}$/.test(String(accountNumber))) return res.status(400).json({ message: 'Account number must contain exactly 10 digits' });
+  if(!accountName || !String(accountName).trim()) return res.status(400).json({ message: 'Please enter the account name exactly as it appears on the bank account' });
   if(withdrawAmount < 500) return res.status(400).json({ message: 'Minimum withdrawal amount is ₦500' });
 
   const now = new Date();
@@ -796,32 +799,48 @@ app.post('/api/withdrawals', authMiddleware, (req, res) => {
   const data = readData();
   const user = findUserById(data, req.user.id);
   if(!user) return res.status(404).json({ message: 'User not found' });
-  if(!user.activePlan) return res.status(400).json({ message: 'Purchase a VIP plan before requesting a withdrawal.' });
-  if(withdrawAmount > (user.balance || 0)) return res.status(400).json({ message: 'Insufficient balance' });
 
-  // Validate verification id (result of /api/verify-account)
-  data.verifications = data.verifications || [];
-  const verification = data.verifications.find(v => v.id === verificationId && v.bankName === bankName && v.accountNumber === accountNumber);
-  if(!verification) return res.status(400).json({ message: 'Unable to verify account details. Please check the bank and account number.' });
+  // Prevent duplicate rapid submissions: if a pending withdrawal with identical details was created recently, reject
+  data.withdrawals = data.withdrawals || [];
+  const recentDuplicate = (data.withdrawals || []).find(w => w.userId === user.id && w.status === 'pending' && w.amount === withdrawAmount && w.accountNumber === accountNumber && (Date.now() - (w.createdAt || 0)) < 60 * 1000);
+  if(recentDuplicate) return res.status(429).json({ message: 'Duplicate withdrawal detected. Please wait a moment before trying again.' });
 
+  // Ensure the user has sufficient available balance (server authoritative check)
+  const available = Number(user.balance || 0);
+  if(withdrawAmount > available) return res.status(400).json({ message: 'Insufficient balance' });
+
+  // Calculate withdrawal fee (configured in paymentSettings.withdrawalFee) — default to 0 if not configured
+  const fee = Number((data.paymentSettings && data.paymentSettings.withdrawalFee) || 0);
+  const netAmount = Math.max(0, withdrawAmount - fee);
+
+  // Reserve funds immediately to protect the wallet from double-spend
+  user.balance = Number(user.balance || 0) - withdrawAmount;
+
+  const ref = `WD-${Math.floor(Math.random()*900000 + 100000)}`;
   const withdrawal = {
     id: 'wd-' + Date.now(),
+    ref,
     userId: user.id,
     amount: withdrawAmount,
+    fee,
+    netAmount,
     bankName,
     accountNumber,
-    accountName: verification.accountName,
+    accountName: String(accountName).trim(),
     status: 'pending',
+    reserved: true,
     statusHistory: [{ status: 'pending', at: Date.now() }],
     createdAt: Date.now()
   };
 
-  data.withdrawals = data.withdrawals || [];
   data.withdrawals.push(withdrawal);
-  // create a pending transaction record
-  recordTransaction(data, { userId: user.id, type: 'withdrawal', amount: withdrawAmount, status: 'pending', meta: { withdrawalId: withdrawal.id } });
+  // create a pending transaction record (debit)
+  recordTransaction(data, { userId: user.id, type: 'withdrawal', amount: withdrawAmount, status: 'pending', meta: { withdrawalId: withdrawal.id, ref } });
   // notify user that withdrawal was submitted
-  createNotification(data, { userId: user.id, title: 'Withdrawal submitted', text: `Your withdrawal request of ₦${withdrawAmount} was submitted and is awaiting admin verification.`, type: 'info' });
+  createNotification(data, { userId: user.id, title: 'Withdrawal submitted', text: `Your withdrawal request of ₦${withdrawAmount} has been submitted and is awaiting administrator approval. Ref: ${ref}`, type: 'info' });
+  // create admin notification
+  try{ createNotification(data, { userId: 'admin', title: 'Withdrawal submitted', text: `${user.fullName || user.phone || user.id} requested withdrawal of ₦${withdrawAmount}. Ref: ${ref}`, type: 'admin' }); }catch(e){}
+
   writeData(data);
   res.json({ withdrawal });
 });
@@ -917,13 +936,13 @@ app.post('/api/admin/withdrawals/:id/approve', adminAuthMiddleware, (req, res) =
   if(wd.status === 'approved') return res.status(400).json({ message: 'Withdrawal already approved' });
   const user = findUserById(data, wd.userId);
   if(!user) return res.status(404).json({ message: 'User not found' });
-  if(wd.amount > (user.balance || 0)) return res.status(400).json({ message: 'Insufficient balance at approval time' });
-  user.balance -= wd.amount;
+
+  // At submission time funds were reserved (deducted). Do not deduct again here to avoid double-debit.
   wd.status = 'approved';
   wd.statusHistory = wd.statusHistory || [];
   wd.statusHistory.push({ status: 'approved', at: Date.now() });
   if(data.transactions) data.transactions.forEach(t => { if(t.meta && t.meta.withdrawalId === wd.id) t.status = 'approved'; });
-  createNotification(data, { userId: wd.userId, title: 'Withdrawal approved', text: `Your withdrawal of ₦${wd.amount} has been approved and processed.`, type: 'success' });
+  createNotification(data, { userId: wd.userId, title: 'Withdrawal approved', text: `Your withdrawal of ₦${wd.amount} has been approved and is being processed. Ref: ${wd.ref || wd.id}`, type: 'success' });
   addAuditLog(data, { adminToken: req.admin.token, action: 'approve_withdrawal', details: { withdrawalId: wd.id, userId: wd.userId, amount: wd.amount } });
   writeData(data);
   res.json({ withdrawal: wd, user: sanitizeUser(user) });
@@ -936,11 +955,26 @@ app.post('/api/admin/withdrawals/:id/reject', adminAuthMiddleware, (req, res) =>
   const wd = (data.withdrawals || []).find(w => w.id === id);
   if(!wd) return res.status(404).json({ message: 'Withdrawal not found' });
   if(wd.status === 'rejected') return res.status(400).json({ message: 'Withdrawal already rejected' });
+  const user = findUserById(data, wd.userId);
+  if(!user) return res.status(404).json({ message: 'User not found' });
+
+  // Restore reserved funds if they were deducted at submission time
+  if(wd.reserved){
+    user.balance = Number(user.balance || 0) + Number(wd.amount || 0);
+    wd.reserved = false;
+  }
+
   wd.status = 'rejected';
   wd.statusHistory = wd.statusHistory || [];
   wd.statusHistory.push({ status: 'rejected', at: Date.now(), reason: reason || null });
+
+  // Update related transactions to rejected
   if(data.transactions) data.transactions.forEach(t => { if(t.meta && t.meta.withdrawalId === wd.id) t.status = 'rejected'; });
-  createNotification(data, { userId: wd.userId, title: 'Withdrawal rejected', text: reason || 'Your withdrawal request was rejected by the administrator.', type: 'warning' });
+
+  // Create a reversal/credit transaction to reflect funds returned to the wallet
+  recordTransaction(data, { userId: wd.userId, type: 'withdrawal_rejected', amount: Number(wd.amount || 0), status: 'completed', meta: { withdrawalId: wd.id } });
+
+  createNotification(data, { userId: wd.userId, title: 'Withdrawal rejected', text: reason || 'Your withdrawal request was rejected by the administrator. Funds have been returned to your wallet.', type: 'warning' });
   addAuditLog(data, { adminToken: req.admin.token, action: 'reject_withdrawal', details: { withdrawalId: wd.id, userId: wd.userId, reason: reason || null } });
   writeData(data);
   res.json({ withdrawal: wd });

@@ -75,6 +75,13 @@ const api = {
     return { notifications: [] };
   },
 
+  getPaymentSettings: async () => {
+    if(USE_API){
+      return apiFetch(`${API_BASE}/payment-settings`, { method: 'GET' });
+    }
+    return { settings: { withdrawalFee: 0 } };
+  },
+
   getDepositAccount: async (opts = {}) => {
     // opts: { amount }
     if(USE_API){
@@ -111,13 +118,13 @@ const api = {
     return { user: u };
   },
 
-  withdraw: async ({ amount, bankName, accountNumber, verificationId }) => {
+  withdraw: async ({ amount, bankName, accountNumber, accountName }) => {
     if(USE_API){
-      return apiFetch(`${API_BASE}/withdrawals`, { method:'POST', body: { amount, bankName, accountNumber, verificationId } });
+      return apiFetch(`${API_BASE}/withdrawals`, { method:'POST', body: { amount, bankName, accountNumber, accountName } });
     }
     const u = getUser();
     if(!u) throw new Error('Not authenticated');
-    const req = { id: 'wd-' + Date.now(), amount, bankName, accountNumber, status: 'pending', createdAt: Date.now() };
+    const req = { id: 'wd-' + Date.now(), amount, bankName, accountNumber, accountName, status: 'pending', createdAt: Date.now() };
     const all = JSON.parse(localStorage.getItem('ff_withdrawals') || '[]');
     all.push(req);
     localStorage.setItem('ff_withdrawals', JSON.stringify(all));

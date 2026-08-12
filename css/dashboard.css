@@ -1,4 +1,5 @@
 @import './style.css';
+@import './responsive.css';
 .wallet-grid{display:grid; grid-template-columns:1fr; gap:16px}
 .wallet-card{padding:16px; border-radius:16px; background:linear-gradient(180deg, rgba(37,99,235,0.10), rgba(15,23,42,0.92)); border:1px solid rgba(37,99,235,0.22); box-shadow:0 10px 26px rgba(2,6,23,0.35); min-height:72px; display:flex; align-items:center; justify-content:space-between}
 .wallet-card .muted{margin-bottom:10px; display:block; font-size:13px; letter-spacing:0.06em; text-transform:uppercase}
@@ -41,7 +42,18 @@
 .deposit-card h2{margin-top:0;}
 .deposit-meta{padding:18px; background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.14); margin:18px 0;}
 .deposit-meta p{margin:8px 0 0;color:var(--text-secondary);line-height:1.7}
-.paystack-account-card{padding:20px; border-radius:20px; background:linear-gradient(180deg, rgba(37,99,235,0.08), rgba(15,23,42,0.4)); border:1px solid rgba(37,99,235,0.18); margin-bottom:24px}
+.paystack-account-card{padding:14px; border-radius:14px; background:linear-gradient(180deg, rgba(37,99,235,0.08), rgba(15,23,42,0.4)); border:1px solid rgba(37,99,235,0.18); margin-bottom:16px}
+.deposit-account-grid{display:grid; grid-template-columns:1fr; gap:10px}
+.account-stat-label{font-size:12px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.08em}
+.account-stat-value{font-weight:700; font-size:16px; color:#fff}
+.paystack-account-card .btn{flex:1}
+@media(min-width:480px){
+  .deposit-account-grid{grid-template-columns:repeat(2,1fr)}
+}
+.deposit-card .modern-form input, .deposit-card .modern-form button, .deposit-card .modern-form .btn{width:100%}
+.deposit-card .btn.primary{display:block}
+.deposit-hero-card{padding:14px}
+.deposit-hero-value{font-size:24px}
 .paystack-account-header{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px}
 .paystack-account-grid{display:grid; gap:16px}
 .paystack-stat{font-size:26px; font-weight:700; color:#fff; word-break:break-all}
@@ -51,7 +63,18 @@
 .modern-form{display:grid; gap:20px}
 #active-plan{padding:22px}
 #active-plan h3{margin-top:0}
-.dashboard-shell{padding-bottom:80px}
+.dashboard-shell{padding-bottom:96px}
+
+/* Mobile form and filter tweaks */
+.form-field input, .form-field select{width:100%; box-sizing:border-box}
+.filter-row{display:flex; gap:8px; overflow:auto; padding:6px 0}
+.filter-btn{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--text-secondary); padding:8px 10px; border-radius:12px; font-size:13px}
+.filter-btn.active{background:var(--primary); color:#111}
+.transactions-list{display:flex; flex-direction:column; gap:8px}
+@media (min-width:431px) and (max-width:699px){
+  .container{padding:16px}
+  .vip-grid{grid-template-columns:repeat(2,1fr)}
+}
 .dashboard-header{display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; padding:18px 20px; border-radius:22px; background:linear-gradient(135deg, rgba(251,191,36,0.16), rgba(17,19,27,0.92)); border:1px solid rgba(251,191,36,0.22)}
 .dashboard-profile-row{display:flex; gap:14px; align-items:center}
 .dashboard-avatar-wrap{width:62px; height:62px; border-radius:18px; overflow:hidden; background:rgba(255,255,255,0.06); display:grid; place-items:center; border:1px solid rgba(255,255,255,0.1)}
@@ -102,4 +125,19 @@
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @keyframes fadeIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
 @media(min-width:700px){.wallet-grid{grid-template-columns:repeat(3,1fr)} .actions-grid{grid-template-columns:repeat(6,1fr)} .form-grid{grid-template-columns:repeat(2,1fr)} .paystack-account-grid{grid-template-columns:repeat(2,1fr)} .deposit-hero{grid-template-columns:2fr 1fr;}.dashboard-hero{grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:28px;}.dashboard-hero-panel{justify-content:flex-end;}.deposit-hero-panel{justify-content:flex-end;}.deposit-card{max-width:720px; margin:auto;}.hero-brand{margin-bottom:0;}.dashboard-wallet-grid{grid-template-columns:repeat(4,1fr)} .deposit-account-grid{grid-template-columns:repeat(2,1fr)} }
+
+/* Profile card tweaks */
+.profile-card{padding:16px; border-radius:16px}
+.profile-card div{margin-bottom:10px}
+.profile-card .btn.small{padding:8px 10px; font-size:13px}
+
+/* small refinements for transaction modal on phones */
+.modal-card{padding:16px}
+.modal-card h2{font-size:18px}
+
+/* safe-area adjustments */
+@supports(padding:env(safe-area-inset-bottom)){
+  .dashboard-shell{padding-bottom:calc(env(safe-area-inset-bottom) + 64px)}
+}
+
 

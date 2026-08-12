@@ -12,35 +12,25 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const submitBtn = form?.querySelector('button[type="submit"]');
   const verifyBtn = document.getElementById('verify-account');
 
-  if(!u.activePlan){
-    if(withdrawStatus){
-      withdrawStatus.style.display = 'block';
-    }
-    if(form){
-      form.querySelectorAll('input, button, select').forEach(el => el.disabled = true);
-      if(submitBtn) submitBtn.textContent = 'Buy VIP to Withdraw';
-    }
-    return;
+  // No longer require an active VIP plan to request withdrawal. Display helpful guidance instead.
+  if(withdrawStatus){
+    withdrawStatus.style.display = 'block';
   }
 
-  if(withdrawStatus) withdrawStatus.style.display = 'none';
-
-  // Account verification flow
+  // Optional account verification flow (testing or provider configured). Not required to submit.
   verifyBtn?.addEventListener('click', async ()=>{
     const bank = document.getElementById('bank-name').value.trim();
     const acctNo = document.getElementById('account-number').value.trim();
     const acctNameEl = document.getElementById('account-name');
-    const verIdEl = document.getElementById('verification-id');
     if(!bank){ showToast('Please select a bank', 'warning'); return; }
     if(!/^\d{10}$/.test(acctNo)){ showToast('Account number must be exactly 10 digits', 'warning'); return; }
     try{
       const res = await api.verifyAccount({ bankName: bank, accountNumber: acctNo });
       if(res && res.success){
         if(acctNameEl) acctNameEl.value = res.accountName || '';
-        if(verIdEl) verIdEl.value = res.verificationId || '';
-        showToast('Account verified', 'success');
+        showToast('Account name retrieved (testing mode). Please confirm the name matches the account.', 'success');
       }else{
-        showToast(res.message || 'Unable to verify account details. Please check the bank and account number.', 'error');
+        showToast(res.message || 'Unable to verify account details. Verification is optional; you may enter the account name manually.', 'info');
       }
     }catch(err){ console.error(err); showToast(err.message || 'Verification failed', 'error'); }
   });
@@ -54,23 +44,36 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const bank = document.getElementById('bank-name').value.trim();
     const acctNo = document.getElementById('account-number').value.trim();
     const acctName = document.getElementById('account-name').value.trim();
-    const verificationId = document.getElementById('verification-id').value;
+
     if(!amt || amt <= 0){ stopLoading(); showToast('Enter a valid amount', 'warning'); return; }
     if(amt > (u.balance||0)){ stopLoading(); showToast('Insufficient balance', 'warning'); return; }
     const hr = new Date().getHours();
     if(hr < 9 || hr >= 21){ stopLoading(); showToast('Withdrawals are available only between 9:00 AM and 9:00 PM.', 'warning'); return; }
-    if(!bank || !acctNo){ stopLoading(); showToast('Please complete your bank details', 'warning'); return; }
+    if(!bank || !acctNo || !acctName){ stopLoading(); showToast('Please complete your bank details and account name', 'warning'); return; }
     if(!/^\d{10}$/.test(acctNo)){ stopLoading(); showToast('Account number must be exactly 10 digits', 'warning'); return; }
-    if(!verificationId){ stopLoading(); showToast('Please verify the account before submitting the withdrawal request', 'warning'); return; }
+
+    // Retrieve withdrawal fee from server to show user breakdown before confirmation
     try{
-      const res = await api.withdraw({ amount: amt, bankName: bank, accountNumber: acctNo, verificationId });
-      if(res && res.request){
-        showToast('Withdrawal request submitted. Admin approval required before payment.', 'success');
+      const settingsRes = await api.getPaymentSettings?.() || {};
+      const fee = Number((settingsRes.settings && settingsRes.settings.withdrawalFee) || 0);
+      const net = Math.max(0, amt - fee);
+      const confirmMsg = `Confirm Withdrawal:\n\nAmount: ₦${formatN(amt)}\nBank: ${bank}\nAccount Number: ${acctNo}\nAccount Name: ${acctName}\nWithdrawal Fee: ₦${formatN(fee)}\nNet Amount: ₦${formatN(net)}\n\nPlease confirm that the bank details are correct. FundFlow cannot verify the account name automatically at this time.`;
+      if(!confirm(confirmMsg)) { stopLoading(); return; }
+
+      // Submit withdrawal request to server (server is authoritative and will reserve funds)
+      const res = await api.withdraw({ amount: amt, bankName: bank, accountNumber: acctNo, accountName: acctName });
+      if(res && res.withdrawal){
+        showToast('Withdrawal request submitted. Administrator approval is required before payment.', 'success');
+        setTimeout(()=> location.href = 'dashboard.html', 800);
+      }else if(res && res.request){
+        // fallback local/demo behaviour
+        showToast('Withdrawal request submitted (demo). Administrator approval is required.', 'success');
         setTimeout(()=> location.href = 'dashboard.html', 800);
       }else{
         showToast('Withdrawal submission failed', 'error');
       }
     }catch(err){ console.error(err); showToast(err.message || 'Withdrawal failed', 'error'); }
+
     stopLoading();
   });
 });
