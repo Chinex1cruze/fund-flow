@@ -9,9 +9,43 @@
 </head>
 <body>
   <div data-include="components/navbar.html"></div>
-  <main class="page container">
-    <h1>VIP Investment Plans</h1>
-    <div id="vip-list" class="vip-grid"></div>
+  <main class="page container vip-page">
+    <section class="vip-hero card">
+      <div class="vip-hero-top">
+        <div>
+          <div class="muted kicker">VIP investment</div>
+          <h1>Growth plans built for steady returns.</h1>
+        </div>
+        <div class="vip-badge">
+          <span class="muted">Daily yield</span>
+          <strong>Up to 5%+</strong>
+        </div>
+      </div>
+      <p class="lead">Choose a plan and unlock daily payouts. Each VIP plan is designed to help your balance compound with a predictable return.</p>
+    </section>
+
+    <section class="vip-summary-grid">
+      <article class="card vip-summary compact-panel">
+        <div class="muted kicker">Plan access</div>
+        <h2>Flexible investment tiers</h2>
+        <p>Select a plan that matches your budget and goal.</p>
+      </article>
+      <article class="card vip-summary compact-panel">
+        <div class="muted kicker">Reward cycle</div>
+        <h2>Daily earnings</h2>
+        <p>Every 24 hours, your active plan pays out a daily reward.</p>
+      </article>
+    </section>
+
+    <section class="card vip-section">
+      <div class="section-heading compact">
+        <div>
+          <div class="muted kicker">Available plans</div>
+          <h2>Choose your VIP Plan</h2>
+        </div>
+      </div>
+      <div id="vip-list" class="vip-grid"></div>
+    </section>
   </main>
   <div data-include="components/footer.html"></div>
   <script src="js/app.js"></script>
