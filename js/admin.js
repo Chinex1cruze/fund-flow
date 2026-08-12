@@ -171,9 +171,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     `).join('');
   }
 
+  function renderVIPPurchases(items){
+    const list = items || [];
+    const el = document.getElementById('vip-purchases-list');
+    if(!el) return;
+    if(!list.length){ el.innerHTML = '<div class="muted">No VIP purchases found.</div>'; return; }
+    el.innerHTML = list.slice().reverse().map(v => `
+      <article class="note-panel card" style="margin:12px 0;">
+        <div><strong>${v.ref || v.id}</strong></div>
+        <div class="muted">User: ${v.userId}</div>
+        <div class="muted">Plan: ${v.planName}</div>
+        <div class="muted">Purchase: ₦${formatN(v.purchaseAmount || 0)}</div>
+        <div class="muted">Daily: ₦${formatN(v.dailyEarning || 0)}</div>
+        <div class="muted">Days Completed: ${v.daysCompleted || 0} / ${v.durationDays || 30}</div>
+        <div class="muted">Status: ${v.status || 'pending'}</div>
+        <div class="muted">Next Earning: ${v.nextEarningAt ? new Date(v.nextEarningAt).toLocaleString() : '—'}</div>
+      </article>
+    `).join('');
+  }
+
   async function loadQueue() {
     try {
-      const [stats, deposits, withdrawals, users, accounts, announcements, transactions, adminNotifications] = await Promise.all([
+      const [stats, deposits, withdrawals, users, accounts, announcements, transactions, adminNotifications, vipsRes] = await Promise.all([
         adminFetch('/api/admin/stats'),
         adminFetch('/api/admin/deposits'),
         adminFetch('/api/admin/withdrawals'),
@@ -181,7 +200,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         adminFetch('/api/admin/deposit-accounts'),
         adminFetch('/api/admin/announcements'),
       adminFetch('/api/admin/transactions'),
-      adminFetch('/api/admin/notifications')
+      adminFetch('/api/admin/notifications'),
+      adminFetch('/api/admin/vips')
       ]);
 
       statsGrid.innerHTML = [
@@ -218,6 +238,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           `).join('') : '<div class="muted">No admin notifications.</div>';
         }
       }catch(e){/* ignore */}
+
+      // render VIP purchases
+      try{
+        renderVIPPurchases((vipsRes && (vipsRes.vipPurchases || vipsRes.vips)) || []);
+      }catch(e){ /* ignore */ }
     } catch (err) {
       showToast(err.message || 'Failed to load admin queue', 'error');
     }

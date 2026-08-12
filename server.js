@@ -69,6 +69,7 @@ function ensureDataFile(){
       auditLogs: [],
       announcements: [],
       notifications: [],
+      vipPurchases: [],
       depositAccounts: DEFAULT_DEPOSIT_ACCOUNTS,
       depositAccountCursor: 0,
       paymentSettings: {
@@ -225,16 +226,78 @@ function getPaystackPublicKey(){
   return PAYSTACK_PUBLIC_KEY || process.env.PAYSTACK_PUBLIC_KEY || '';
 }
 
-function applyPayouts(user){
+function applyPayouts(data, user){
+  // data: full data object from readData(); user: user object reference from data
   if(!user || !user.activePlan || !user.activePlan.nextPayoutAt) return false;
+  // Ensure plan bookkeeping fields exist
+  user.activePlan.durationDays = Number(user.activePlan.durationDays || 30);
+  user.activePlan.daysCompleted = Number(user.activePlan.daysCompleted || 0);
+  user.activePlan.daily = Number(user.activePlan.daily || 0);
+  user.activePlan.totalEarned = Number(user.activePlan.totalEarned || 0);
+
   let updated = false;
   const now = Date.now();
-  while(user.activePlan.nextPayoutAt <= now){
-    user.balance = (user.balance || 0) + (user.activePlan.daily || 0);
-    user.earnings = (user.earnings || 0) + (user.activePlan.daily || 0);
-    user.activePlan.nextPayoutAt += 24 * 60 * 60 * 1000;
+
+  // Process due earnings one day at a time to maintain atomicity and avoid overshooting
+  while(user.activePlan.nextPayoutAt <= now && (user.activePlan.daysCompleted < user.activePlan.durationDays)){
+    const nextDay = user.activePlan.daysCompleted + 1;
+    // Avoid duplicate crediting: check vipPurchase earnings array if available
+    let vipPurchase = null;
+    if(user.activePlan.purchaseId){
+      data.vipPurchases = data.vipPurchases || [];
+      vipPurchase = data.vipPurchases.find(v => v.id === user.activePlan.purchaseId);
+    }
+    // If purchase record exists, ensure this day not already processed
+    if(vipPurchase){
+      vipPurchase.earnings = vipPurchase.earnings || [];
+      const existing = vipPurchase.earnings.find(e => e.day === nextDay);
+      if(existing){
+        // Already processed; advance pointers
+        user.activePlan.daysCompleted = vipPurchase.earnings.length;
+        user.activePlan.nextPayoutAt += 24 * 60 * 60 * 1000;
+        continue;
+      }
+    }
+
+    // Credit wallet
+    const dailyAmount = Number(user.activePlan.daily || 0);
+    user.balance = (user.balance || 0) + dailyAmount;
+    user.earnings = (user.earnings || 0) + dailyAmount;
+    user.activePlan.daysCompleted = (user.activePlan.daysCompleted || 0) + 1;
+    user.activePlan.totalEarned = (user.activePlan.totalEarned || 0) + dailyAmount;
+
+    // Create transaction record for this earning
+    const vipRef = user.activePlan.purchaseRef || (user.activePlan.purchaseId || null);
+    const tx = recordTransaction(data, { userId: user.id, type: 'vip_daily_earning', amount: dailyAmount, status: 'completed', meta: { vipPurchaseId: user.activePlan.purchaseId || null, vipRef: vipRef, planId: user.activePlan.id, planName: user.activePlan.name, earningDay: user.activePlan.daysCompleted } });
+
+    // Create user notification
+    createNotification(data, { userId: user.id, title: 'VIP DAILY EARNING', text: `Your ${user.activePlan.name} daily earning of ₦${dailyAmount} has been credited (Day ${user.activePlan.daysCompleted}/${user.activePlan.durationDays}). Reference: ${vipRef}`, type: 'success' });
+
+    // Create admin notification (persistent)
+    try{ createNotification(data, { userId: 'admin', title: 'VIP DAILY EARNING', text: `${user.fullName || user.phone || user.id} received ₦${dailyAmount} for ${user.activePlan.name} (Day ${user.activePlan.daysCompleted}/${user.activePlan.durationDays}). Ref: ${vipRef}`, type: 'admin' }); }catch(e){}
+
+    // Mark earning in vipPurchase record if exists
+    if(vipPurchase){
+      vipPurchase.earnings = vipPurchase.earnings || [];
+      vipPurchase.earnings.push({ id: `earning-${Date.now()}`, day: user.activePlan.daysCompleted, amount: dailyAmount, txId: tx.id, createdAt: Date.now() });
+    }
+
+    // Schedule next payout
+    user.activePlan.nextPayoutAt = Number(user.activePlan.nextPayoutAt || Date.now()) + 24 * 60 * 60 * 1000;
+
     updated = true;
+
+    // If we've reached duration, mark completed
+    if(user.activePlan.daysCompleted >= user.activePlan.durationDays){
+      user.activePlan.status = 'completed';
+      // Create completion transaction/notification
+      recordTransaction(data, { userId: user.id, type: 'vip_cycle_completed', amount: 0, status: 'completed', meta: { vipPurchaseId: user.activePlan.purchaseId || null, vipRef: vipRef } });
+      createNotification(data, { userId: user.id, title: 'VIP Cycle Completed', text: `Your ${user.activePlan.name} 30-day cycle has completed.`, type: 'success' });
+      try{ createNotification(data, { userId: 'admin', title: 'VIP Completed', text: `${user.fullName || user.phone || user.id} completed ${user.activePlan.name} (${vipRef})`, type: 'admin' }); }catch(e){}
+      break;
+    }
   }
+
   return updated;
 }
 
@@ -254,7 +317,7 @@ function authMiddleware(req, res, next){
     const data = readData();
     const user = findUserById(data, payload.id);
     if(!user) return res.status(401).json({ message: 'Invalid authentication token' });
-    if(applyPayouts(user)) writeData(data);
+    if(applyPayouts(data, user)) writeData(data);
     req.user = user;
     next();
   }catch(err){
@@ -649,15 +712,73 @@ app.post('/api/vips/buy', authMiddleware, (req, res) => {
   const user = findUserById(data, req.user.id);
   if(!user) return res.status(404).json({ message: 'User not found' });
   if(!user.balance || user.balance < plan.deposit) return res.status(400).json({ message: 'Insufficient balance' });
-  if(user.activePlan) return res.status(400).json({ message: 'Only one VIP plan can be active at a time' });
+  if(user.activePlan && user.activePlan.status === 'active') return res.status(400).json({ message: 'Only one VIP plan can be active at a time' });
   const now = Date.now();
+  // Deduct purchase amount once
   user.balance -= plan.deposit;
-  user.activePlan = { id: plan.id, name: plan.name, deposit: plan.deposit, daily: plan.daily, startedAt: now, nextPayoutAt: now + 24 * 60 * 60 * 1000 };
-  // record transaction and create a notification
-  recordTransaction(data, { userId: user.id, type: 'vip_purchase', amount: plan.deposit, status: 'approved', meta: { planId: plan.id } });
+
+  // Create vip purchase record
+  data.vipPurchases = data.vipPurchases || [];
+  const purchaseId = 'vip-' + Date.now();
+  function genVipRef(){ return `VIP-${Math.floor(Math.random()*900000+100000)}`; }
+  let vipRef = genVipRef();
+  const existingRefs = new Set((data.vipPurchases||[]).map(v=>String(v.ref||'').toLowerCase()));
+  while(existingRefs.has(vipRef.toLowerCase())) vipRef = genVipRef();
+
+  const vip = {
+    id: purchaseId,
+    ref: vipRef,
+    userId: user.id,
+    planId: plan.id,
+    planName: plan.name,
+    purchaseAmount: plan.deposit,
+    dailyEarning: plan.daily,
+    durationDays: 30,
+    startedAt: now,
+    nextEarningAt: now + 24 * 60 * 60 * 1000,
+    daysCompleted: 0,
+    status: 'active',
+    earnings: []
+  };
+  data.vipPurchases.push(vip);
+
+  // Attach a lightweight view to the user's activePlan for UI convenience and for backward compatibility
+  user.activePlan = {
+    purchaseId: vip.id,
+    purchaseRef: vip.ref,
+    id: plan.id,
+    name: plan.name,
+    deposit: plan.deposit,
+    daily: plan.daily,
+    startedAt: vip.startedAt,
+    nextPayoutAt: vip.nextEarningAt,
+    nextEarningAt: vip.nextEarningAt,
+    daysCompleted: 0,
+    durationDays: vip.durationDays,
+    totalEarned: 0,
+    status: 'active'
+  };
+
+  // record purchase transaction and create a notification
+  recordTransaction(data, { userId: user.id, type: 'vip_purchase', amount: plan.deposit, status: 'approved', meta: { vipPurchaseId: vip.id, vipRef: vip.ref, planId: plan.id } });
   createNotification(data, { userId: user.id, title: 'VIP Purchased', text: `${plan.name} purchased for ₦${plan.deposit}. Your daily reward is ₦${plan.daily}.`, type: 'success' });
+  // Admin notification
+  try{ createNotification(data, { userId: 'admin', title: 'VIP Purchased', text: `${user.fullName || user.phone || user.id} purchased ${plan.name} for ₦${plan.deposit}. Ref: ${vip.ref}`, type: 'admin' }); }catch(e){}
+
   writeData(data);
-  res.json({ user: sanitizeUser(user) });
+  return res.json({ user: sanitizeUser(user), vip });
+});
+
+app.get('/api/vips/purchases', authMiddleware, (req, res) => {
+  const data = readData();
+  const purchases = (data.vipPurchases || []).filter(v => v.userId === req.user.id);
+  res.json({ purchases });
+});
+
+// Admin: list all VIP purchases
+app.get('/api/admin/vips', adminAuthMiddleware, (req, res) => {
+  const data = readData();
+  res.json({ vipPurchases: data.vipPurchases || [] });
 });
 
 app.post('/api/withdrawals', authMiddleware, (req, res) => {
@@ -927,6 +1048,26 @@ app.use((req, res, next) => {
   }
   res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+// Background processor: VIP earnings processor
+function processVipEarnings(){
+  try{
+    const data = readData();
+    let changed = false;
+    // iterate users and apply payouts where due
+    (data.users || []).forEach(user => {
+      try{
+        if(applyPayouts(data, user)) changed = true;
+      }catch(e){ console.error('VIP payout error for user', user && user.id, e); }
+    });
+    if(changed) writeData(data);
+  }catch(e){ console.error('VIP earnings processor failed', e); }
+}
+
+// Run every minute to pick up due VIP earnings (safe and idempotent)
+setInterval(processVipEarnings, 60 * 1000);
+// Run once at startup
+processVipEarnings();
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`FundFlow backend running on http://localhost:${port}`));
