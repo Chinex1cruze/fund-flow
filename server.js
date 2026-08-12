@@ -91,6 +91,26 @@ function normalizeData(data){
   normalized.depositAccounts = normalized.depositAccounts && normalized.depositAccounts.length ? normalized.depositAccounts : DEFAULT_DEPOSIT_ACCOUNTS;
   normalized.depositAccountCursor = Number.isInteger(normalized.depositAccountCursor) ? normalized.depositAccountCursor : 0;
   normalized.paymentSettings = normalized.paymentSettings || {};
+
+  // Backfill referralCode and referralLink for existing users if missing, ensuring uniqueness
+  const existingCodes = new Set((normalized.users || []).map(u => String(u.referralCode || '').toLowerCase()).filter(Boolean));
+  function genRefCode(){
+    return 'FF' + String(Math.floor(Math.random() * 900000 + 100000));
+  }
+  for(const u of normalized.users){
+    if(!u.referralCode){
+      let code = genRefCode();
+      while(existingCodes.has(code.toLowerCase())) code = genRefCode();
+      u.referralCode = code;
+      existingCodes.add(code.toLowerCase());
+    }
+    if(!u.referralLink){
+      u.referralLink = (process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(u.referralCode || '')}`;
+    }
+    // ensure flag exists
+    if(typeof u.referralRewardProcessed === 'undefined') u.referralRewardProcessed = false;
+  }
+
   return normalized;
 }
 
@@ -289,8 +309,11 @@ app.post('/api/auth/register', (req, res) => {
   if(findUserByPhone(data, phone)) return res.status(409).json({ message: 'Phone number already registered' });
   const id = 'user-' + Date.now();
   const passwordHash = bcrypt.hashSync(password, 10);
-  // Generate a unique referral code for the new user
-  const referralCode = 'REF-' + Math.floor(Math.random() * 900000 + 100000);
+  // Generate a unique referral code for the new user (FF + 6 digits)
+  function genRef(){ return 'FF' + String(Math.floor(Math.random() * 900000 + 100000)); }
+  let referralCode = genRef();
+  const existingCodes = new Set((data.users || []).map(u => String(u.referralCode || '').toLowerCase()).filter(Boolean));
+  while(existingCodes.has(referralCode.toLowerCase())) referralCode = genRef();
   const referralLink = (process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(referralCode)}`;
 
   const user = {
@@ -536,12 +559,18 @@ app.post('/api/deposits', authMiddleware, (req, res) => {
   const data = readData();
   data.deposits = data.deposits || [];
 
-  // If no transactionReference was provided by the client, generate one server-side
-  const txRef = String(transactionReference || `FF-${Math.floor(Math.random()*900000+100000)}`);
-
-  // Prevent duplicate transaction references
-  if(data.deposits.find(d => d.transactionReference && d.transactionReference.toLowerCase() === txRef.toLowerCase())){
-    return res.status(409).json({ message: 'Duplicate transaction reference' });
+  // If no transactionReference was provided by the client, generate one server-side and ensure uniqueness
+  let txRef = String(transactionReference || '');
+  if(!txRef){
+    function genRef(){ return `FF-${Math.floor(Math.random()*900000+100000)}`; }
+    txRef = genRef();
+    const existing = new Set((data.deposits||[]).map(d => String(d.transactionReference||'').toLowerCase()).filter(Boolean));
+    while(existing.has(txRef.toLowerCase())) txRef = genRef();
+  } else {
+    // if client provided a txRef, ensure it does not collide
+    if((data.deposits||[]).some(d => d.transactionReference && d.transactionReference.toLowerCase() === String(txRef).toLowerCase())){
+      return res.status(409).json({ message: 'Duplicate transaction reference' });
+    }
   }
 
   const user = findUserById(data, req.user.id);
