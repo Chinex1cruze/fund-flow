@@ -18,13 +18,16 @@
         </div>
         <div class="balance-card card">
           <div class="muted">Admin token</div>
-          <div class="form-field" style="margin-top:8px; width:100%; max-width:360px;">
+          <div class="form-field" style="margin-top:8px; width:100%; max-width:360px; display:flex; gap:8px; align-items:center;">
             <input type="password" id="admin-token" placeholder="Enter admin token" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button class="btn primary" id="admin-login-btn" type="button">Load</button>
           </div>
         </div>
       </div>
 
       <div id="admin-notifications" style="margin-top:12px;"></div>
+
+      <div id="admin-content" class="hidden">
 
       <div class="wallet-grid" id="stats-grid"></div>
 
@@ -123,7 +126,7 @@
           </div>
           <div id="transactions-list" class="admin-list"></div>
         </section>
-      </div>
+      </div> <!-- end admin-content -->
     </section>
   </main>
 
