@@ -141,3 +141,18 @@
 @keyframes fadeIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
 @media(min-width:700px){.wallet-grid{grid-template-columns:repeat(3,1fr)} .actions-grid{grid-template-columns:repeat(6,1fr)} .form-grid{grid-template-columns:repeat(2,1fr)} .paystack-account-grid{grid-template-columns:repeat(2,1fr)} .deposit-hero{grid-template-columns:2fr 1fr;}.dashboard-hero{grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:28px;}.dashboard-hero-panel{justify-content:flex-end;}.deposit-hero-panel{justify-content:flex-end;}.deposit-card{max-width:720px; margin:auto;}.hero-brand{margin-bottom:0;}.dashboard-wallet-grid{grid-template-columns:repeat(4,1fr)} .deposit-account-grid{grid-template-columns:repeat(2,1fr)} }
 
+/* Profile card tweaks */
+.profile-card{padding:16px; border-radius:16px}
+.profile-card div{margin-bottom:10px}
+.profile-card .btn.small{padding:8px 10px; font-size:13px}
+
+/* small refinements for transaction modal on phones */
+.modal-card{padding:16px}
+.modal-card h2{font-size:18px}
+
+/* safe-area adjustments */
+@supports(padding:env(safe-area-inset-bottom)){
+  .dashboard-shell{padding-bottom:calc(env(safe-area-inset-bottom) + 64px)}
+}
+
+
