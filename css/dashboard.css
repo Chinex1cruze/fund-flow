@@ -13,12 +13,12 @@
 @media (max-width:430px) and (min-width:360px){
   .actions-grid{grid-template-columns:repeat(4, 1fr); gap:12px}
   .action{padding:12px 10px; min-height:72px}
-  .action span{font-size:13px}
+  .action span{font-size:12px}
 }
 @media (max-width:359px){
   .actions-grid{grid-template-columns:repeat(2, 1fr); gap:12px}
   .action{padding:12px 10px; min-height:72px}
-  .action span{font-size:13px}
+  .action span{font-size:12px}
 }
 
 .action{
@@ -57,7 +57,7 @@
 }
 .action .action-icon svg{width:24px; height:24px; display:block}
 
-.action span{display:block; line-height:1.1; font-size:clamp(12px, 2.4vw, 13px); font-weight:700; color:#fff; white-space:normal; overflow-wrap:break-word; word-break:break-word; margin-top:6px}
+.action span{display:block; line-height:1.1; font-size:clamp(11px, 2vw, 12px); font-weight:700; color:#fff; white-space:normal; overflow-wrap:break-word; word-break:break-word; margin-top:6px}
 
 .action::after{content:''; position:absolute; inset:auto 50% 0 50%; width:0; height:0; background:rgba(251,191,36,0.12); border-radius:999px; transition:all .3s ease}
 .action:hover::after{inset:-40% -30%; width:160%; height:200%}
@@ -68,7 +68,7 @@
   .action{padding:12px 10px; min-height:72px; gap:10px}
   .action .action-icon{width:44px;height:44px}
   .action .action-icon svg{width:20px;height:20px}
-  .action span{font-size:13px; white-space:normal; overflow-wrap:break-word; word-break:break-word}
+  .action span{font-size:12px; white-space:normal; overflow-wrap:break-word; word-break:break-word}
 }
 .quick-actions{padding:22px}
 .quick-actions h3{margin-top:0; margin-bottom:16px}
