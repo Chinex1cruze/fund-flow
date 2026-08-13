@@ -11,12 +11,57 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const form = document.getElementById('withdraw-form');
   const submitBtn = form?.querySelector('button[type="submit"]');
 
+  // Fetch server payment settings (fee, withdrawal window) to drive client-side UX
+  let paymentSettings = { withdrawalFee: 0.2, withdrawalWindow: { startHour: 9, endHour: 21 } };
+  try{
+    const sres = await api.getPaymentSettings?.();
+    if(sres && sres.settings) paymentSettings = sres.settings;
+  }catch(e){ /* use defaults */ }
+
   // No longer require an active VIP plan to request withdrawal. Display helpful guidance instead.
   if(withdrawStatus){
     withdrawStatus.style.display = 'block';
+    try{
+      const startH = Number(paymentSettings.withdrawalWindow && paymentSettings.withdrawalWindow.startHour ? paymentSettings.withdrawalWindow.startHour : 9);
+      const endH = Number(paymentSettings.withdrawalWindow && paymentSettings.withdrawalWindow.endHour ? paymentSettings.withdrawalWindow.endHour : 21);
+      const formatted = `Withdrawals are allowed only between ${String(startH).padStart(2,'0')}:00 and ${String(endH).padStart(2,'0')}:00 (server local time).`;
+      // replace first list item text to keep other guidance
+      const ul = withdrawStatus.querySelector('ul');
+      if(ul && ul.children && ul.children.length){
+        ul.children[0].textContent = formatted;
+      }
+    }catch(e){ /* ignore */ }
   }
 
+  // If form missing, nothing to do
   if(!form) return;
+
+  // Helper to enable/disable submit according to server window
+  function isWithinWindow(){
+    const nowH = new Date().getHours();
+    const startH = Number(paymentSettings.withdrawalWindow && paymentSettings.withdrawalWindow.startHour ? paymentSettings.withdrawalWindow.startHour : 9);
+    const endH = Number(paymentSettings.withdrawalWindow && paymentSettings.withdrawalWindow.endHour ? paymentSettings.withdrawalWindow.endHour : 21);
+    return nowH >= startH && nowH < endH;
+  }
+
+  function updateSubmitAvailability(){
+    if(submitBtn){
+      if(!isWithinWindow()){
+        submitBtn.disabled = true;
+        submitBtn.classList.add('disabled');
+        submitBtn.title = 'Withdrawals are allowed only during the configured window.';
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('disabled');
+        submitBtn.title = '';
+      }
+    }
+  }
+
+  // initialize availability and refresh every minute
+  updateSubmitAvailability();
+  setInterval(updateSubmitAvailability, 60 * 1000);
+
   form.addEventListener('submit', async e=>{
     e.preventDefault();
     const button = submitBtn;
@@ -28,8 +73,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
     if(!amt || amt <= 0){ stopLoading(); showToast('Enter a valid amount', 'warning'); return; }
     if(amt > (u.balance||0)){ stopLoading(); showToast('Insufficient balance', 'warning'); return; }
-    const hr = new Date().getHours();
-    if(hr < 9 || hr >= 21){ stopLoading(); showToast('Withdrawals are available only between 9:00 AM and 9:00 PM.', 'warning'); return; }
+    if(!isWithinWindow()){ stopLoading(); const win = paymentSettings.withdrawalWindow || { startHour: 9, endHour: 21 }; showToast(`Withdrawals are available only between ${String(win.startHour).padStart(2,'0')}:00 and ${String(win.endHour).padStart(2,'0')}:00.`, 'warning'); return; }
     if(!bank || !acctNo || !acctName){ stopLoading(); showToast('Please complete your bank details and account name', 'warning'); return; }
     if(!/^\d{10}$/.test(acctNo)){ stopLoading(); showToast('Account number must be exactly 10 digits', 'warning'); return; }
 

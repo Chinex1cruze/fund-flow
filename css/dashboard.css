@@ -4,21 +4,71 @@
 .wallet-card{padding:var(--space-md); border-radius:var(--radius); background:linear-gradient(180deg, rgba(37,99,235,0.10), rgba(15,23,42,0.92)); border:1px solid rgba(37,99,235,0.22); box-shadow:0 10px 26px rgba(2,6,23,0.35); min-height:72px; display:flex; align-items:center; justify-content:space-between}
 .wallet-card .muted{margin-bottom:10px; display:block; font-size:13px; letter-spacing:0.06em; text-transform:uppercase}
 .wallet-card div:last-child{font-size:22px; font-weight:700; color:#fff}
-.actions-grid{display:grid; grid-template-columns:1fr; gap:10px}
-@media (min-width:480px){
-  .actions-grid{grid-template-columns:repeat(3,1fr)}
+.actions-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:18px; align-items:stretch; box-sizing:border-box; grid-auto-rows:1fr;}
+/* medium screens: slightly smaller min width */
+@media (max-width:920px){
+  .actions-grid{grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:14px}
 }
-.action{display:flex; align-items:center; justify-content:center; gap:8px; padding:11px 12px; text-align:center; border-radius:12px; background:var(--card); color:var(--text-secondary); text-decoration:none; transition:all .18s ease; border:1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden; min-height:52px; font-size:13px; font-weight:600; letter-spacing:0.01em}
-.action .action-icon{font-size:16px; display:inline-block; width:24px; text-align:center; line-height:1}
-.action span{display:block; line-height:1.2}
-.action::after{content:''; position:absolute; inset:auto 50% 0 50%; width:0; height:0; background:rgba(251,191,36,0.16); border-radius:999px; transition:all .3s ease}
+/* small phones: responsive 4-col on typical mobile widths, 2-col fallback for very small */
+@media (max-width:430px) and (min-width:360px){
+  .actions-grid{grid-template-columns:repeat(4, 1fr); gap:12px}
+  .action{padding:12px 10px; min-height:72px}
+  .action span{font-size:13px}
+}
+@media (max-width:359px){
+  .actions-grid{grid-template-columns:repeat(2, 1fr); gap:12px}
+  .action{padding:12px 10px; min-height:72px}
+  .action span{font-size:13px}
+}
+
+.action{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px; /* consistent spacing between icon and label */
+  padding:14px 12px;
+  text-align:center;
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color:var(--text-secondary);
+  text-decoration:none;
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  border:1px solid rgba(255,255,255,0.06);
+  position:relative;
+  overflow:hidden;
+  min-height:64px;
+  font-size:13px;
+  height:100%; /* ensure equal height when grid-auto-rows is used */
+  box-sizing:border-box;
+}
+
+/* circular icon background for a premium touch */
+.action .action-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:rgba(251,191,36,0.08);
+  border:1px solid rgba(251,191,36,0.12);
+  box-shadow:0 6px 18px rgba(2,6,23,0.25);
+}
+.action .action-icon svg{width:24px; height:24px; display:block}
+
+.action span{display:block; line-height:1.1; font-size:clamp(12px, 2.4vw, 13px); font-weight:700; color:#fff; white-space:normal; overflow-wrap:break-word; word-break:break-word; margin-top:6px}
+
+.action::after{content:''; position:absolute; inset:auto 50% 0 50%; width:0; height:0; background:rgba(251,191,36,0.12); border-radius:999px; transition:all .3s ease}
 .action:hover::after{inset:-40% -30%; width:160%; height:200%}
-.action:hover{background:rgba(37,99,235,0.14); color:#fff; transform:translateY(-1px); border-color:rgba(251,191,36,0.28)}
-/* refine quick action sizing for compact screens */
-@media(max-width:420px){
-  .action{padding:9px 10px; font-size:12.5px; min-height:50px}
-  .action .action-icon{width:22px; font-size:15px}
-  .actions-grid{grid-template-columns:repeat(4,1fr); gap:8px}
+.action:hover{transform:translateY(-4px); border-color:rgba(251,191,36,0.28); box-shadow:0 10px 30px rgba(2,6,23,0.45)}
+
+/* compact variants for small screens */
+@media(max-width:430px){
+  .action{padding:12px 10px; min-height:72px; gap:10px}
+  .action .action-icon{width:44px;height:44px}
+  .action .action-icon svg{width:20px;height:20px}
+  .action span{font-size:13px; white-space:normal; overflow-wrap:break-word; word-break:break-word}
 }
 .quick-actions{padding:22px}
 .quick-actions h3{margin-top:0; margin-bottom:16px}
@@ -126,7 +176,6 @@
 .compact-stats .note-panel .muted{font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em}
 .compact-stats .note-panel > div:last-child{font-size:18px; font-weight:700; margin-top:6px}
 
-.action .action-icon svg{display:block; width:20px; height:20px}
 .nav-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 10px;color:var(--text-secondary);text-decoration:none;min-height:56px;justify-content:center;font-weight:500}
 .nav-item span{font-size:11px; line-height:1.2}
@@ -210,7 +259,8 @@
 .account-stat-value{font-size:24px; font-weight:700; word-break:break-all; margin-top:4px}
 .transactions-heading{margin-bottom:14px}
 .view-all-link{color:#fde68a; text-decoration:none}
-.transactions-list{display:flex; flex-direction:column; gap:10px} .transaction-card{padding:12px; border-radius:14px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03);}{display:grid; gap:12px}
+.transactions-list{display:flex; flex-direction:column; gap:10px}
+.transaction-card{padding:12px; border-radius:14px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); display:grid; gap:12px;}
 .transaction-row{display:flex; align-items:center; justify-content:space-between; gap:12px; background:rgba(255,255,255,0.04); border-radius:16px; padding:14px; border:1px solid rgba(255,255,255,0.08)}
 .transaction-left{display:flex; gap:12px; align-items:center}
 .transaction-icon{width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.24)}
