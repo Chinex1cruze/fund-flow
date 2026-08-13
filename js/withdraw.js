@@ -24,7 +24,12 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     try{
       const startH = Number(paymentSettings.withdrawalWindow && paymentSettings.withdrawalWindow.startHour ? paymentSettings.withdrawalWindow.startHour : 9);
       const endH = Number(paymentSettings.withdrawalWindow && paymentSettings.withdrawalWindow.endHour ? paymentSettings.withdrawalWindow.endHour : 21);
-      const formatted = `Withdrawals are allowed only between ${String(startH).padStart(2,'0')}:00 and ${String(endH).padStart(2,'0')}:00 (server local time).`;
+      function formatHour(h){
+        const hour = ((h + 11) % 12) + 1; // 1-12
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        return `${hour}:00 ${ampm}`;
+      }
+      const formatted = `Withdrawals are allowed only between ${formatHour(startH)} and ${formatHour(endH)} (server local time).`;
       // replace first list item text to keep other guidance
       const ul = withdrawStatus.querySelector('ul');
       if(ul && ul.children && ul.children.length){
