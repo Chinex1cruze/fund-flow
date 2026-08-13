@@ -77,11 +77,20 @@ function ensureDataFile(){
         bankName: process.env.PAYMENT_BANK_NAME || 'Sterling Bank',
         accountNumber: process.env.PAYMENT_ACCOUNT_NUMBER || '0142489003',
        accountName: process.env.PAYMENT_ACCOUNT_NAME || 'Chinedu Chima',
-       withdrawalFee: 0.2
+       withdrawalFee: 0.2,
+       // Withdrawal window (24-hour local server time). Default: 9 (09:00) to 21 (21:00)
+       withdrawalWindow: { startHour: 9, endHour: 21 }
       }
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
   }
+}
+
+function buildReferralLink(code, req = null){
+  const codeValue = String(code || '').trim();
+  const envBase = (process.env.BASE_URL || '').replace(/\/$/, '');
+  const base = envBase || (req && req.headers && req.headers.host ? `${req.protocol || 'http'}://${req.get('host')}` : 'http://localhost:3000');
+  return `${base.replace(/\/$/, '')}/register.html?ref=${encodeURIComponent(codeValue)}`;
 }
 
 function normalizeData(data){
@@ -111,8 +120,8 @@ function normalizeData(data){
       u.referralCode = code;
       existingCodes.add(code.toLowerCase());
     }
-    if(!u.referralLink){
-      u.referralLink = (process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(u.referralCode || '')}`;
+    if(!u.referralLink || u.referralLink.startsWith('/')){
+      u.referralLink = buildReferralLink(u.referralCode);
     }
     // ensure flag exists
     if(typeof u.referralRewardProcessed === 'undefined') u.referralRewardProcessed = false;
@@ -342,12 +351,17 @@ function getPaymentSettings(){
   const ds = data.paymentSettings || {};
   const configuredFee = Number(ds.withdrawalFee ?? 0.2);
   const normalizedFee = Number.isFinite(configuredFee) && configuredFee > 1 ? configuredFee / 100 : configuredFee;
+  const windowCfg = ds.withdrawalWindow || { startHour: 9, endHour: 21 };
+  // normalize values
+  const startHour = Number.isFinite(Number(windowCfg.startHour)) ? Number(windowCfg.startHour) : 9;
+  const endHour = Number.isFinite(Number(windowCfg.endHour)) ? Number(windowCfg.endHour) : 21;
   return {
     mode: process.env.PAYMENT_MODE || ds.mode || 'testing',
     bankName: process.env.PAYMENT_BANK_NAME || ds.bankName || 'Access bank',
     accountNumber: process.env.PAYMENT_ACCOUNT_NUMBER || ds.accountNumber || '1909738593',
     accountName: process.env.PAYMENT_ACCOUNT_NAME || ds.accountName || 'chinedu Chima',
-    withdrawalFee: Number.isFinite(normalizedFee) ? normalizedFee : 0.2
+    withdrawalFee: Number.isFinite(normalizedFee) ? normalizedFee : 0.2,
+    withdrawalWindow: { startHour: startHour, endHour: endHour }
   };
 }
 
@@ -392,7 +406,7 @@ app.post('/api/auth/register', (req, res) => {
   let referralCode = genRef();
   const existingCodes = new Set((data.users || []).map(u => String(u.referralCode || '').toLowerCase()).filter(Boolean));
   while(existingCodes.has(referralCode.toLowerCase())) referralCode = genRef();
-  const referralLink = (process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(referralCode)}`;
+  const referralLink = buildReferralLink(referralCode, req);
 
   const user = {
     id,
@@ -491,9 +505,11 @@ app.get('/api/referrals', authMiddleware, (req, res) => {
 
   const history = referralTxs.map(t => ({ id: t.id, amount: t.amount, status: t.status, createdAt: t.createdAt, meta: t.meta || {} }));
 
+  const referralLink = user.referralLink && !user.referralLink.startsWith('/') ? user.referralLink : buildReferralLink(user.referralCode || '', req);
+
   res.json({
     referralCode: user.referralCode || null,
-    referralLink: user.referralLink || ((process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/, '') : '') + `/register.html?ref=${encodeURIComponent(user.referralCode || '')}`),
+    referralLink,
     totalReferrals: referredUsers.length,
     totalReferralEarnings: totalReferralEarnings,
     referrals: referredUsers.map(u=>({ id: u.id, fullName: u.fullName, phone: u.phone, createdAt: u.createdAt || null })),
@@ -850,7 +866,12 @@ app.post('/api/withdrawals', authMiddleware, (req, res) => {
 
   const now = new Date();
   const hour = now.getHours();
-  if(hour < 9 || hour >= 21) return res.status(400).json({ message: 'Withdrawals are available only between 9:00 AM and 9:00 PM.' });
+  const settings = getPaymentSettings();
+  const win = settings.withdrawalWindow || { startHour: 9, endHour: 21 };
+  const startH = Number.isFinite(Number(win.startHour)) ? Number(win.startHour) : 9;
+  const endH = Number.isFinite(Number(win.endHour)) ? Number(win.endHour) : 21;
+  // allow withdrawals when hour is >= startH and < endH (local server time)
+  if(hour < startH || hour >= endH) return res.status(400).json({ message: `Withdrawals are available only between ${String(startH).padStart(2,'0')}:00 and ${String(endH).padStart(2,'0')}:00 (server local time).` });
 
   const data = readData();
   const user = findUserById(data, req.user.id);

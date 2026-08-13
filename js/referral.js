@@ -7,9 +7,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const earnAmountEl = document.getElementById('ref-earn-amount');
   const historyEl = document.getElementById('ref-history');
 
+  const normalizeReferralLink = (value, code) => {
+    if(!value) {
+      return `${window.location.origin}/register.html?ref=${encodeURIComponent(code || '')}`;
+    }
+    if(/^https?:\/\//i.test(value)) return value;
+    if(value.startsWith('/')) return `${window.location.origin}${value}`;
+    return new URL(value, window.location.origin).toString();
+  };
+
   let data = {
     referralCode: user.referralCode || 'FF000000',
-    referralLink: user.referralLink || `${window.location.origin}/register.html?ref=${encodeURIComponent(user.referralCode || 'FF000000')}`,
+    referralLink: normalizeReferralLink(user.referralLink, user.referralCode || 'FF000000'),
     totalReferrals: user.referrals || 0,
     totalReferralEarnings: user.refEarnings || 0,
     history: []
@@ -20,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(res) {
       data = {
         referralCode: res.referralCode || data.referralCode,
-        referralLink: res.referralLink || data.referralLink,
+        referralLink: normalizeReferralLink(res.referralLink || data.referralLink, res.referralCode || data.referralCode),
         totalReferrals: Number(res.totalReferrals || user.referrals || 0),
         totalReferralEarnings: Number(res.totalReferralEarnings || user.refEarnings || 0),
         history: Array.isArray(res.history) ? res.history : []
@@ -30,7 +39,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.warn('Unable to fetch referral data, using local values.', error);
   }
 
-  if(refLinkEl) refLinkEl.value = data.referralLink;
+  if(refLinkEl) {
+    refLinkEl.value = data.referralLink;
+    refLinkEl.addEventListener('click', () => {
+      window.location.href = data.referralLink;
+    });
+  }
   if(codeEl) codeEl.textContent = data.referralCode;
   if(countEl) countEl.textContent = String(data.totalReferrals || 0);
   if(earnEl) earnEl.textContent = `₦${formatN(data.totalReferralEarnings || 0)}`;
