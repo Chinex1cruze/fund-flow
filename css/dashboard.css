@@ -4,14 +4,21 @@
 .wallet-card{padding:var(--space-md); border-radius:var(--radius); background:linear-gradient(180deg, rgba(37,99,235,0.10), rgba(15,23,42,0.92)); border:1px solid rgba(37,99,235,0.22); box-shadow:0 10px 26px rgba(2,6,23,0.35); min-height:72px; display:flex; align-items:center; justify-content:space-between}
 .wallet-card .muted{margin-bottom:10px; display:block; font-size:13px; letter-spacing:0.06em; text-transform:uppercase}
 .wallet-card div:last-child{font-size:22px; font-weight:700; color:#fff}
-.actions-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:18px; align-items:stretch}
+.actions-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:18px; align-items:stretch; box-sizing:border-box; grid-auto-rows:1fr;}
 /* medium screens: slightly smaller min width */
 @media (max-width:920px){
   .actions-grid{grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:14px}
 }
-/* small phones */
-@media (max-width:420px){
-  .actions-grid{grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); gap:12px}
+/* small phones: responsive 4-col on typical mobile widths, 2-col fallback for very small */
+@media (max-width:430px) and (min-width:360px){
+  .actions-grid{grid-template-columns:repeat(4, 1fr); gap:12px}
+  .action{padding:12px 10px; min-height:72px}
+  .action span{font-size:13px}
+}
+@media (max-width:359px){
+  .actions-grid{grid-template-columns:repeat(2, 1fr); gap:12px}
+  .action{padding:12px 10px; min-height:72px}
+  .action span{font-size:13px}
 }
 
 .action{
@@ -48,18 +55,18 @@
 }
 .action .action-icon svg{width:20px; height:20px; display:block}
 
-.action span{display:block; line-height:1.1; font-size:13px; font-weight:700; color:#fff}
+.action span{display:block; line-height:1.1; font-size:13px; font-weight:700; color:#fff; white-space:normal; overflow-wrap:break-word; word-break:break-word}
 
 .action::after{content:''; position:absolute; inset:auto 50% 0 50%; width:0; height:0; background:rgba(251,191,36,0.12); border-radius:999px; transition:all .3s ease}
 .action:hover::after{inset:-40% -30%; width:160%; height:200%}
 .action:hover{transform:translateY(-4px); border-color:rgba(251,191,36,0.28); box-shadow:0 10px 30px rgba(2,6,23,0.45)}
 
 /* compact variants for small screens */
-@media(max-width:420px){
-  .action{padding:12px 10px; min-height:56px}
+@media(max-width:430px){
+  .action{padding:12px 10px; min-height:72px; gap:10px}
   .action .action-icon{width:40px;height:40px}
-  .action .action-icon svg{width:18px;height:18px}
-  .action span{font-size:12px}
+  .action .action-icon svg{width:20px;height:20px}
+  .action span{font-size:13px; white-space:normal; overflow-wrap:break-word; word-break:break-word}
 }
 .quick-actions{padding:22px}
 .quick-actions h3{margin-top:0; margin-bottom:16px}
