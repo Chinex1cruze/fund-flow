@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     if(sres && sres.settings) paymentSettings = sres.settings;
   }catch(e){ /* use defaults */ }
 
+  // Helper to format hours as 12-hour strings (e.g., 9:00 AM)
+  function formatHour(h){
+    const hour = ((h + 11) % 12) + 1; // 1-12
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return `${hour}:00 ${ampm}`;
+  }
+
   // No longer require an active VIP plan to request withdrawal. Display helpful guidance instead.
   if(withdrawStatus){
     withdrawStatus.style.display = 'block';
@@ -76,11 +83,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const acctNo = document.getElementById('account-number').value.trim();
     const acctName = document.getElementById('account-name').value.trim();
 
-    if(!amt || amt <= 0){ stopLoading(); showToast('Enter a valid amount', 'warning'); return; }
-    if(amt > (u.balance||0)){ stopLoading(); showToast('Insufficient balance', 'warning'); return; }
-    if(!isWithinWindow()){ stopLoading(); const win = paymentSettings.withdrawalWindow || { startHour: 9, endHour: 21 }; showToast(`Withdrawals are available only between ${String(win.startHour).padStart(2,'0')}:00 and ${String(win.endHour).padStart(2,'0')}:00.`, 'warning'); return; }
-    if(!bank || !acctNo || !acctName){ stopLoading(); showToast('Please complete your bank details and account name', 'warning'); return; }
-    if(!/^\d{10}$/.test(acctNo)){ stopLoading(); showToast('Account number must be exactly 10 digits', 'warning'); return; }
+    if(!amt || amt <= 0){ stopLoading(); showToast('Please enter a valid withdrawal amount.', 'warning'); return; }
+    if(amt > (u.balance||0)){ stopLoading(); showToast('Insufficient balance for this withdrawal.', 'warning'); return; }
+    if(!isWithinWindow()){ stopLoading(); const win = paymentSettings.withdrawalWindow || { startHour: 9, endHour: 21 }; showToast(`Withdrawals are permitted only between ${formatHour(win.startHour)} and ${formatHour(win.endHour)}. Please try again during this period.`, 'warning'); return; }
+    if(!bank || !acctNo || !acctName){ stopLoading(); showToast('Please complete all bank details, including account number and account name.', 'warning'); return; }
+    if(!/^\d{10}$/.test(acctNo)){ stopLoading(); showToast('Account number must be exactly 10 digits.', 'warning'); return; }
 
     // Retrieve withdrawal fee from server to show user breakdown before confirmation
     try{
@@ -139,16 +146,16 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       // Submit withdrawal request to server (server is authoritative and will reserve funds)
       const res = await api.withdraw({ amount: amt, bankName: bank, accountNumber: acctNo, accountName: acctName });
       if(res && res.withdrawal){
-        showToast('Withdrawal request submitted. Administrator approval is required before payment.', 'success');
+        showToast('Your withdrawal request has been submitted. Administrator approval is required before funds are disbursed.', 'success');
         setTimeout(()=> location.href = 'dashboard.html', 800);
       }else if(res && res.request){
         // fallback local/demo behaviour
-        showToast('Withdrawal request submitted (demo). Administrator approval is required.', 'success');
+        showToast('Your withdrawal request has been submitted (demo). Administrator approval is required before funds are disbursed.', 'success');
         setTimeout(()=> location.href = 'dashboard.html', 800);
       }else{
-        showToast('Withdrawal submission failed', 'error');
+        showToast('Unable to submit withdrawal request. Please try again.', 'error');
       }
-    }catch(err){ console.error(err); showToast(err.message || 'Withdrawal failed', 'error'); }
+    }catch(err){ console.error(err); showToast((err && err.message) ? `Unable to submit withdrawal request: ${err.message}` : 'Unable to submit withdrawal request.', 'error'); }
 
     stopLoading();
   });
